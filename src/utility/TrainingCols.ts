@@ -26,7 +26,12 @@ const training_item_cols : any = [
   {
     Header: 'Day',
     accessor: 'day'
-  }
+  },
+  {
+    Header: 'Instructions',
+    accessor: 'instructions'
+  },
+  
 ];
 
 export default training_item_cols;

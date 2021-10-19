@@ -174,6 +174,7 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
     tempo: '',
     day: '',
     instructions: '',
+    rest: ''
   };
 
   const [localItems, setItems] = useState<any>(schedule.items);
