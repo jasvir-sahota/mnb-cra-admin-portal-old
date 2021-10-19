@@ -127,11 +127,17 @@ const EditProfile = (props: { id: any }) => {
   const classes = useStyles();
   const [schedules, setSchedules] = useState<any>();
   const [dietSchedules, setDietSchedules] = useState<any>();
+  let { REACT_APP_API_HOST } = process.env;
+
+  if(!REACT_APP_API_HOST) {
+    console.log('api host not set');
+    REACT_APP_API_HOST = 'https://api.mnbfitness.ca/';
+  } 
 
   if (!schedules) {
     axios({
       method: 'get',
-      url: `https://api.mnbfitness.ca/api/v1/admin/customers/training_schedules/${props.id}`,
+      url: `${REACT_APP_API_HOST}api/v1/admin/customers/training_schedules/${props.id}`,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Credentials': 'true',
@@ -146,7 +152,7 @@ const EditProfile = (props: { id: any }) => {
   if (!dietSchedules) {
     axios({
       method: 'get',
-      url: `https://api.mnbfitness.ca/api/v1/admin/customers/diet_schedules/${props.id}`,
+      url: `${REACT_APP_API_HOST}api/v1/admin/customers/diet_schedules/${props.id}`,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Credentials': 'true',

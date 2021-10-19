@@ -210,8 +210,15 @@ const DietScheduleForm = (props: { schedule: DietSchedule, customer_id: string }
       message: 'Failed to save the schedule in the system'
     };
 
+    let { REACT_APP_API_HOST } = process.env;
+
+    if(!REACT_APP_API_HOST) {
+      console.log('api host not set');
+      REACT_APP_API_HOST = 'https://api.mnbfitness.ca/';
+    } 
+
     axios.put(
-      `https://api.mnbfitness.ca/api/v1/admin/customers/diet_schedules/${props.customer_id}`,
+      `${REACT_APP_API_HOST}/api/v1/admin/customers/diet_schedules/${props.customer_id}`,
       localSchedule,
       config
     ).then(res => {

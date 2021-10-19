@@ -200,21 +200,29 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
     setActive(scheduleObj.is_active)
   }, [schedule]);
 
+
+  let { REACT_APP_API_HOST } = process.env;
+
+  if(!REACT_APP_API_HOST) {
+    console.log('api host not set');
+    REACT_APP_API_HOST = 'https://api.mnbfitness.ca/';
+  }
+  const config = { 
+    headers: { 
+      "Content-Type": "application/json" ,
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Origin' : '*'
+    } 
+  };
+
   if(updating) {
-    const config = { 
-      headers: { 
-        "Content-Type": "application/json" ,
-        'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Allow-Origin' : '*'
-      } 
-    };
     const defaultAlert = {
       severity: "error",
       message: 'Failed to save the schedule in the system'
     };
     
     axios.put(
-      `https://api.mnbfitness.ca/api/v1/admin/customers/training_schedules/${props.customer_id}`,
+      `${REACT_APP_API_HOST}api/v1/admin/customers/training_schedules/${props.customer_id}`,
       localSchedule,
       config
       ).then(res => {
@@ -277,7 +285,7 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
     scheduleCopy.is_active = isActive;
 
     const result = _.values(scheduleCopy).find(value => {
-      console.log(value, typeof value);
+      //console.log(value, typeof value);
       if (typeof value !== 'number' && typeof value !== 'boolean') {
         return _.isEmpty(value);
       } else {
@@ -285,7 +293,7 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
       }
     });
     
-    console.log(result, scheduleCopy);
+    //console.log(result, scheduleCopy);
     if(result !== undefined) {
       setAlert({
         severity: "error",
@@ -296,6 +304,36 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
       setSechedule(scheduleCopy);
       setUpdating(true);
     }
+  }
+
+  const deleteSchedule = () => {
+    const id = schedule.id;
+
+    const defaultAlert = {
+      severity: "error",
+      message: 'Failed to delete the schedule in the system'
+    };
+
+    axios.post(
+      `${REACT_APP_API_HOST}api/v1/admin/customers/training_schedules/archive-schedule`,
+      {
+        id
+      },
+      config
+      ).then(res => {
+        setUpdating(false);
+        if(res.status === httpstatus.OK) {
+          setAlert({
+            severity: "success",
+            message: 'Sucessfully deleted the schedule'
+          });
+        } else { 
+          setAlert(defaultAlert);
+        }
+      }).catch(err => {
+        setUpdating(false);
+        setAlert(defaultAlert);
+      })
   }
 
   const updateScheduleObj = (value: any, field: string) => {
@@ -309,8 +347,8 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
     if(cell.column.id === 'remove'){
       const localItemscopy = _.cloneDeep(localItems);
       const foundIndex = localItemscopy.findIndex((item : any) => item.id === cell.row.original.id);
-      console.log(localItems, foundIndex)
-      console.log(cell.row);
+      //console.log(localItems, foundIndex)
+      //console.log(cell.row);
       localItemscopy.splice(foundIndex, 1);
       setItems(localItemscopy);
     }
@@ -539,7 +577,7 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
             variant="contained"
             color="error"
             className={classes.deleteBtn}
-            onClick={() => saveSchedule()}
+            onClick={() => deleteSchedule()}
           >
             Delete Schedule
           </Button>
