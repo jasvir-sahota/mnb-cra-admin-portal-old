@@ -131,7 +131,7 @@ const EditProfile = (props: { id: any }) => {
   if (!schedules) {
     axios({
       method: 'get',
-      url: `http://localhost:4000/api/v1/admin/customers/training_schedules/${props.id}`,
+      url: `https://api.mnbfitness.ca/api/v1/admin/customers/training_schedules/${props.id}`,
       headers: {
         'Content-Type': 'application/json'
       }
@@ -143,7 +143,7 @@ const EditProfile = (props: { id: any }) => {
   if (!dietSchedules) {
     axios({
       method: 'get',
-      url: `http://localhost:4000/api/v1/admin/customers/diet_schedules/${props.id}`,
+      url: `https://api.mnbfitness.ca/api/v1/admin/customers/diet_schedules/${props.id}`,
       headers: {
         'Content-Type': 'application/json'
       }
