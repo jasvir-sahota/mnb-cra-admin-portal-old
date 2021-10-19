@@ -213,7 +213,7 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
     };
     
     axios.put(
-      `https://api.mnbfitness.ca/api/v1/admin/customers/diet_schedules/${props.customer_id}`,
+      `https://api.mnbfitness.ca/api/v1/admin/customers/training_schedules/${props.customer_id}`,
       localSchedule,
       config
       ).then(res => {
