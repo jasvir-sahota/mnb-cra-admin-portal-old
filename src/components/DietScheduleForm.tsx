@@ -197,25 +197,27 @@ const DietScheduleForm = (props: { schedule: DietSchedule, customer_id: string }
     setActive(scheduleObj.is_active)
   }, [schedule]);
 
+  let { REACT_APP_API_HOST } = process.env;
+
+  if(!REACT_APP_API_HOST) {
+    console.log('api host not set');
+    REACT_APP_API_HOST = 'https://api.mnbfitness.ca/';
+  } 
+
+  const config = { 
+    headers: { 
+      "Content-Type": "application/json" ,
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Origin' : '*'
+    } 
+  };
+
   if (updating) {
-    const config = { 
-      headers: { 
-        "Content-Type": "application/json" ,
-        'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Allow-Origin' : '*'
-      } 
-    };
+
     const defaultAlert = {
       severity: "error",
       message: 'Failed to save the schedule in the system'
     };
-
-    let { REACT_APP_API_HOST } = process.env;
-
-    if(!REACT_APP_API_HOST) {
-      console.log('api host not set');
-      REACT_APP_API_HOST = 'https://api.mnbfitness.ca/';
-    } 
 
     axios.put(
       `${REACT_APP_API_HOST}/api/v1/admin/customers/diet_schedules/${props.customer_id}`,
@@ -301,6 +303,36 @@ const DietScheduleForm = (props: { schedule: DietSchedule, customer_id: string }
       setSechedule(scheduleCopy);
       setUpdating(true);
     }
+  }
+
+  const deleteSchedule = () => {
+    const id = schedule.id;
+
+    const defaultAlert = {
+      severity: "error",
+      message: 'Failed to delete the schedule in the system'
+    };
+
+    axios.post(
+      `${REACT_APP_API_HOST}api/v1/admin/customers/diet_schedules/archive-schedule`,
+      {
+        id
+      },
+      config
+      ).then(res => {
+        setUpdating(false);
+        if(res.status === httpstatus.OK) {
+          setAlert({
+            severity: "success",
+            message: 'Sucessfully deleted the schedule'
+          });
+        } else { 
+          setAlert(defaultAlert);
+        }
+      }).catch(err => {
+        setUpdating(false);
+        setAlert(defaultAlert);
+      })
   }
 
   const updateScheduleObj = (value: any, field: string) => {
@@ -498,7 +530,7 @@ const DietScheduleForm = (props: { schedule: DietSchedule, customer_id: string }
                 variant="contained"
                 color="error"
                 className={classes.deleteBtn}
-                onClick={() => saveSchedule()}
+                onClick={() => deleteSchedule()}
               >
                 Delete Schedule
               </Button>
