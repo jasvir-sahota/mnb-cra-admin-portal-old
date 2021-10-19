@@ -133,8 +133,11 @@ const EditProfile = (props: { id: any }) => {
       method: 'get',
       url: `https://api.mnbfitness.ca/api/v1/admin/customers/training_schedules/${props.id}`,
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Origin' : '*',
+      },
+      withCredentials: true,
     }).then(schedules => {
       setSchedules(schedules.data);
     })
@@ -145,8 +148,11 @@ const EditProfile = (props: { id: any }) => {
       method: 'get',
       url: `https://api.mnbfitness.ca/api/v1/admin/customers/diet_schedules/${props.id}`,
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Origin' : '*',
+      },
+      withCredentials: true,
     }).then(schedules => {
       setDietSchedules(schedules.data);
     })
