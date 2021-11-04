@@ -1,4 +1,4 @@
-import { makeStyles } from "@material-ui/styles";
+import { makeStyles } from "@mui/styles";
 import {
   Tabs,
   Tab,
@@ -7,7 +7,7 @@ import {
   Theme,
   Select,
   FormControl,
-} from "@material-ui/core";
+} from "@mui/material";
 import { TrainingSchedule } from "../domain/TrainingSchedule";
 import { useState } from 'react';
 import FiberManualRecordIcon from "@material-ui/icons/FiberManualRecord";

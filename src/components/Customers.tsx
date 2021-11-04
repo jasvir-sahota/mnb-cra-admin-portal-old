@@ -2,11 +2,11 @@ import { observer } from "mobx-react";
 import { useStore } from "../App";
 import customer_cols from "../utility/CustomerCols";
 import { useTable, useExpanded } from 'react-table'
-import MaUTable from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
+import MaUTable from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
 import { toJS } from 'mobx'
 import React, { useState } from 'react';
 import { EditProfileWithDialog } from "./EditProfile";
@@ -64,7 +64,6 @@ const Customers = (props: {customers: any}) => {
               return (
                 <TableCell {...cell.getCellProps()} onClick={() => {
                   setOpen(true);
-                  console.log(row);
                   setSelectedCust({
                     id: row.original.id,
                     first_name: row.original.first_name,

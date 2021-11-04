@@ -1,12 +1,7 @@
 import { makeAutoObservable } from "mobx";
 import Customer, { NetworkStatus } from "../domain/Customer";
-import { Profile } from "../domain/Profile";
 import ICustomerRepo from "../infra/ICustomerRepo";
 import { RootStore } from "./RootStore";
-import _ from 'lodash';
-import { AuthStatus } from "../domain/Auth";
-
-type cust_info = {first_name: string, last_name: string, email: string, password: string};
 
 export class CustomerStore {
   network_status = NetworkStatus.Loading;

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import axios from 'axios';
 import withDialog from "../HOC/withDialog";
-import { makeStyles } from "@material-ui/styles";
-import { Tabs, Tab, Typography, Theme } from "@material-ui/core";
+import { makeStyles } from "@mui/styles";
+import { Tabs, Tab, Typography, Theme } from "@mui/material";
 import { a11yProps, TabPanel } from "./TabPanel";
 import clsx from "clsx";
 import React from "react";

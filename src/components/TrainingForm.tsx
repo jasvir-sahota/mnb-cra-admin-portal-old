@@ -1,5 +1,5 @@
 import { TrainingSchedule } from "../domain/TrainingSchedule";
-import { makeStyles, withStyles } from "@material-ui/styles";
+import { makeStyles, withStyles } from "@mui/styles";
 import { Button, TextField, Theme, Backdrop, CircularProgress, MenuItem, Checkbox, FormControlLabel, FormGroup } from "@mui/material";
 import { useEffect, useState } from "react";
 import _ from 'lodash';
@@ -10,11 +10,11 @@ import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
 import LabelledOutline from "./LabelledOutline";
 import { useTable, useExpanded } from 'react-table'
-import MaUTable from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
+import MaUTable from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
 import training_item_cols from "../utility/TrainingCols";
 import { days } from "../utility/Util";
 import DeleteIcon from "@material-ui/icons/Delete";

@@ -57,4 +57,6 @@ const customer_cols = [
   },
 ];
 
+
+
 export default customer_cols;
