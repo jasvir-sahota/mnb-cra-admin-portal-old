@@ -1,11 +1,11 @@
-import { makeStyles } from "@material-ui/styles";
+import { makeStyles } from "@mui/styles";
 import {
   Typography,
   MenuItem,
   Theme,
   Select,
   FormControl,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useState } from 'react';
 import FiberManualRecordIcon from "@material-ui/icons/FiberManualRecord";
 import moment from "moment";
@@ -81,8 +81,7 @@ const Diet = (props: { schedules: DietSchedule[], customer_id: string }) => {
       start_date: 'a',
       end_date: 'a',
       is_active: false,
-      notes: [],
-      items: []
+      plan_id: ''
     })
   }
 

@@ -9,7 +9,8 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import { toJS } from 'mobx'
 import React, { useState } from 'react';
-import { EditProfileWithDialog } from "./EditProfile";
+import EditProfile, { EditProfileWithDialog } from "./EditProfile";
+import { Dialog, DialogContent, DialogTitle } from "@mui/material";
 
 type cust = {
   id: string,
@@ -29,19 +30,25 @@ const Customers = (props: {customers: any}) => {
   
   const [open, setOpen] = useState<any>(false);
   const [selectedCust, setSelectedCust] = useState<any>();
-  console.log(selectedCust);
+
   return (
     <div>
       {
         open && selectedCust ?
-        <EditProfileWithDialog 
-          id={selectedCust.id}
-          open={open}
-          setOpen={setOpen}
-          fullWidth={true}  
+        <Dialog 
+          open={open} 
+          onClose={() => setOpen(false)}
           maxWidth={"lg"}
-          title={`${selectedCust.first_name} ${selectedCust.last_name}`}
-        /> : null
+          fullWidth={true}
+        >
+        <DialogTitle>{selectedCust.first_name} {selectedCust.last_name}</DialogTitle>
+        <DialogContent>
+          <br />
+          <EditProfile 
+            id = {selectedCust.id}
+          />
+        </DialogContent>
+      </Dialog> : null
       }
     <MaUTable {...getTableProps()}>
       <TableHead>

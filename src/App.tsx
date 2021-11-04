@@ -10,6 +10,8 @@ import { ActiveComponent } from "./domain/App";
 import WorkoutPlans from "./components/WorkoutPlans";
 import WorkoutPlan from "./components/WorkoutPlan";
 import { makeStyles } from "@mui/styles";
+import DietPlans from "./components/DietPlans";
+import DietPlan from "./components/DietPlan";
 
 const StoreContext = createContext<RootStore | null>(null);
 const rootStore = new RootStore();
@@ -49,39 +51,11 @@ const useStore = () => {
   return store;
 };
 
-const ComponentRendrer = observer(() => {
-  const store = useStore();
-  const component = store.appStore.active_component;
-
-  switch (component) {
-    case ActiveComponent.Dashboard:
-      return <WorkoutPlan plan={{name: 'Lada Plan', notes: ["1", "2"], items: [{
-        "workout_id": "1",
-        "day": "Monday",
-          "name": "Chest Workout",
-          "excercise": "Chest",
-          "stretching": "none",
-          "set": "1",
-          "rep": "1",
-          "tempo": "1",
-          "rest": "60 sec",
-          "instructions": "",
-          "notes": "note"
-      },]}}/>
-  
-    case ActiveComponent.WorkoutPlans:
-      return <WorkoutPlans />
-
-    default:
-      return <FacadeApp />
-  }
-
-});
-
 const FacadeApp = observer(() => {
   const store = useStore();
   store.customerStore.fetchCustomers();
   store.workoutStore.fetchPlans();
+  store.dietStore.fetchPlans();
   console.log('called fetchcustomers')
   return (
     <div>
@@ -108,6 +82,23 @@ const FacadeWorkoutPlan = () => {
   )
 }
 
+const FacadeDietPlan = () => {
+  const { state } = useLocation();
+  const { plan } : any = state;
+
+  return (
+    <div>
+      {
+        plan !== null ?
+        <div>
+          <DietPlan plan = {plan} />
+        </div>
+        : null
+      }
+    </div>
+  )
+}
+
 function App() {
   return (
     <div className="App">
@@ -116,9 +107,13 @@ function App() {
           <ThemeProvider theme={theme}>
             <Router>
               <Routes>
-                <Route path="/" element={<ComponentRendrer />} />
+                <Route path="/" element={<FacadeApp />} />
+                <Route path="/workout-plans" element={<WorkoutPlans />} />
                 <Route path="/workout-plan" element={<FacadeWorkoutPlan />} />
+                <Route path="/diet-plan" element={<FacadeDietPlan />} />
                 <Route path="/add-workout-plan" element={<WorkoutPlan />} />
+                <Route path="/add-diet-plan" element={<DietPlan />} />
+                <Route path="/diet-plans" element={<DietPlans />} />
               </Routes>
             </Router>
           </ThemeProvider>

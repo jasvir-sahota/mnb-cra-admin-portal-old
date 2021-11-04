@@ -9,6 +9,7 @@ export class CustomerStore {
 
   _customerRepo: ICustomerRepo;
   _rootStore: RootStore;
+  schedule_status = NetworkStatus.Loaded;
 
   constructor(customerRepo: ICustomerRepo, rootStore: RootStore){
     makeAutoObservable(this, { _rootStore: false, _customerRepo: false });
@@ -25,5 +26,15 @@ export class CustomerStore {
   
   setCustomers(customers: Customer[] | []) {
     this.customers = customers;
+  }
+
+  async saveSchedule(schedule: string, customer_id: string){
+    this.schedule_status = NetworkStatus.Updating;
+    const status = await this._customerRepo.saveSchedule(schedule, customer_id);
+    if(status) {
+      this.schedule_status = NetworkStatus.Updated
+    } else {
+      this.schedule_status = NetworkStatus.UpdateFailed
+    }
   }
 }

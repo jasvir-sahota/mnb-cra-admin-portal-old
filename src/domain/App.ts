@@ -1,7 +1,8 @@
 enum ActiveComponent {
   Dashboard,
   WorkoutPlans,
-  DietPlans
+  DietPlans,
+  Customer
 }
 
 enum NetworkStatus {

@@ -1,26 +1,19 @@
 import { TrainingSchedule } from "../domain/TrainingSchedule";
 import { makeStyles, withStyles } from "@mui/styles";
-import { Button, TextField, Theme, Backdrop, CircularProgress, MenuItem, Checkbox, FormControlLabel, FormGroup } from "@mui/material";
+import { Button, TextField, Theme, Backdrop, CircularProgress, MenuItem, Checkbox, FormControlLabel, FormGroup, FormControl, Select, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import _ from 'lodash';
 import Alert from '@mui/lab/Alert';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import DateAdapter from '@mui/lab/AdapterMoment';
-import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
 import LabelledOutline from "./LabelledOutline";
-import { useTable, useExpanded } from 'react-table'
-import MaUTable from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableHead from '@mui/material/TableHead'
-import TableRow from '@mui/material/TableRow'
-import training_item_cols from "../utility/TrainingCols";
-import { days } from "../utility/Util";
 import DeleteIcon from "@material-ui/icons/Delete";
 import DatePicker from '@mui/lab/DatePicker';
 import axios from 'axios';
 import httpstatus from 'http-status';
+import { observer } from "mobx-react";
+import { useStore } from "../App";
 
 const useStyles = makeStyles((theme: Theme) => ({
   backdrop: {
@@ -101,7 +94,15 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   error: {
     margin: '0 0 3% 0'
-  }
+  },
+  selectLabel: {
+    display: "flex",
+    width: "95%",
+  },
+  formControl: {
+    width: "100%",
+    margin: "0 0 3% 0",
+  },
 }));
 
 type alertType = {
@@ -109,97 +110,39 @@ type alertType = {
   message: string
 }
 
-const CustomColorLabelledOutline = withStyles({
-  root: {
-    "& $notchedOutline": {
-      borderColor: "purple"
-    },
-    "&:hover $notchedOutline": {
-      borderColor: "orange"
-    },
-    "& $inputLabel": {
-      color: "green"
-    },
-    "&:hover $inputLabel": {
-      color: "blue"
-    },
-    "& $content": {
-      color: "black"
-    },
-    "&:hover $content": {
-      color: "purple"
-    },
-    backgroundColor: 'aliceblue'
-  },
-  notchedOutline: {},
-  inputLabel: {},
-  content: {}
-})(LabelledOutline);
-
-const deleteRowColumn = () => {
-  return  {
-    // Make an expander cell
-    Header: () => null, // No header
-    id: 'remove', // It needs an ID
-    accessor: '',
-    Cell: ({ row } : any) => (
-      // Use Cell to render an expander for each row.
-      // We can use the getToggleRowExpandedProps prop-getter
-      // to build the expander.
-      <span {...row.getToggleRowExpandedProps()}>
-        <DeleteIcon style={{ color: 'red'}}/>
-      </span>
-    )
-  }
-}
-
-const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}) => {
+const TrainingForm = observer((props : {schedule : TrainingSchedule, customer_id: string}) => {
   const classes = useStyles();
   const { schedule } = props;
+  const { workoutStore } = useStore();
+
   const {
     id,
     start_date, 
     end_date, 
-    items,
-    notes,
+    plan_id,
     is_active
   } = schedule;
 
-  const itemObj : any = {
-    id: '',
-    excercise: '',
-    stretching: '',
-    set: '',
-    rep: '',
-    tempo: '',
-    day: '',
-    instructions: '',
-    rest: ''
-  };
-
-  const [localItems, setItems] = useState<any>(schedule.items);
-  const [item, setItem] = useState(itemObj);
   const [alert, setAlert] = useState<alertType | null>(null);
   const [updating, setUpdating] = useState<any>();
   const [localSchedule, setSechedule] = useState<any>(schedule);
   const [isActive, setActive] = useState<boolean>(schedule.is_active);
+  const [planId, setPlanId] = useState<any>(schedule.plan_id);
 
   useEffect(() => {
     const scheduleObj : any = {
       id,
       start_date: isNaN(Number(schedule.start_date)) ? String(moment().unix()) : start_date,
       end_date :  isNaN(Number(schedule.end_date)) === true ? String(moment().add(15, 'days').unix()) : end_date,
-      items,
-      notes: notes.join('\n').toString(),
+      plan_id,
       is_active: is_active
     };
 
     setSechedule(scheduleObj);
-    setItems(scheduleObj.items);
     setAlert(null);
-    setActive(scheduleObj.is_active)
+    setActive(scheduleObj.is_active);
+    setPlanId(schedule.plan_id);
   }, [schedule]);
-
 
   let { REACT_APP_API_HOST } = process.env;
 
@@ -215,77 +158,41 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
     } 
   };
 
-  if(updating) {
-    const defaultAlert = {
-      severity: "error",
-      message: 'Failed to save the schedule in the system'
-    };
-    
-    axios.put(
-      `${REACT_APP_API_HOST}api/v1/admin/customers/training_schedules/${props.customer_id}`,
-      localSchedule,
-      config
-      ).then(res => {
-        setUpdating(false);
-        if(res.status === httpstatus.OK) {
-          setAlert({
-            severity: "success",
-            message: 'Sucessfully saved the schedule in system'
-          });
-        } else { 
-          setAlert(defaultAlert);
-        }
-      }).catch(err => {
-        setUpdating(false);
-        console.error(err);
-        setAlert(defaultAlert);
-      })
-  }
-
-  const rm = training_item_cols.find((tr : any)=> tr.id === 'remove');
-  if(!rm) {
-    training_item_cols.unshift(deleteRowColumn());
-  }
-
-  const {
-    getTableProps,
-    headerGroups,
-    rows,
-    prepareRow
-  } = useTable({columns: training_item_cols, data: localItems }, useExpanded);
-
-  const updateItem = (value: string, field: string) => {
-    type key = keyof typeof itemObj;
-    const updatedObj = _.cloneDeep(item);
-    updatedObj[field as key]  = value;
-    setItem(updatedObj);
-  }
-
-  const addItem = () => {
-    item.id = uuidv4();
-    const result = _.values(item).find(value => value === undefined || value === null || value === "");
-
-    if(result !== undefined) {
-      setAlert({
+  useEffect(() => {
+    if(updating) {
+      const defaultAlert = {
         severity: "error",
-        message: 'Required values cannot be empty. Please make sure there aren`t any such fields.'
-      });
-    } else {
-      setAlert(null);
-      const updatedItems = [...localItems, item];
-      setItems(updatedItems);
-      setItem(itemObj);
+        message: 'Failed to save the schedule in the system'
+      };
+      
+      axios.put(
+        `${REACT_APP_API_HOST}api/v1/admin/customers/training_schedules/${props.customer_id}`,
+        localSchedule,
+        config
+        ).then(res => {
+          setUpdating(false);
+          if(res.status === httpstatus.OK) {
+            setAlert({
+              severity: "success",
+              message: 'Sucessfully saved the schedule in system'
+            });
+          } else { 
+            setAlert(defaultAlert);
+          }
+        }).catch(err => {
+          setUpdating(false);
+          console.error(err);
+          setAlert(defaultAlert);
+        })
     }
-  }
+  },[updating])
 
   const saveSchedule = () => {
-    item.id = uuidv4();
-    const scheduleCopy = _.cloneDeep(localSchedule);
-    scheduleCopy.items = localItems;
+    const scheduleCopy : TrainingSchedule = _.cloneDeep(localSchedule);
+    scheduleCopy.plan_id = planId;
     scheduleCopy.is_active = isActive;
 
     const result = _.values(scheduleCopy).find(value => {
-      //console.log(value, typeof value);
       if (typeof value !== 'number' && typeof value !== 'boolean') {
         return _.isEmpty(value);
       } else {
@@ -293,14 +200,12 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
       }
     });
     
-    //console.log(result, scheduleCopy);
     if(result !== undefined) {
       setAlert({
         severity: "error",
         message: 'Required values cannot be empty. Please make sure there aren`t any such fields.'
       });
     } else {
-      scheduleCopy.notes = scheduleCopy.notes.split('\n');
       setSechedule(scheduleCopy);
       setUpdating(true);
     }
@@ -308,7 +213,7 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
 
   const deleteSchedule = () => {
     const id = schedule.id;
-
+    console.log(schedule);
     const defaultAlert = {
       severity: "error",
       message: 'Failed to delete the schedule in the system'
@@ -341,17 +246,6 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
     const updatedObj : any = _.cloneDeep(localSchedule);
     updatedObj[field as key]  = value;
     setSechedule(updatedObj);
-  }
-
-  const handleCellClick = (cell : any) => {
-    if(cell.column.id === 'remove'){
-      const localItemscopy = _.cloneDeep(localItems);
-      const foundIndex = localItemscopy.findIndex((item : any) => item.id === cell.row.original.id);
-      //console.log(localItems, foundIndex)
-      //console.log(cell.row);
-      localItemscopy.splice(foundIndex, 1);
-      setItems(localItemscopy);
-    }
   }
   
   return (
@@ -391,162 +285,28 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
         />
         </LocalizationProvider>
         </section>
-        <section style={{ padding: '0 0 2% 0'}}>
-          {
-            localItems.length > 0 ?
-            <MaUTable {...getTableProps()}  key = {schedule.id}>
-            <TableHead>
-              {headerGroups.map(headerGroup => (
-                <TableRow {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map(column => (
-                    <TableCell {...column.getHeaderProps()}>
-                      {column.render('Header')}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHead>
-            <TableBody>
-              {rows.map((row : any, i) => {
-                prepareRow(row)
-                return (
-                  <TableRow {...row.getRowProps()}>
-                  {row.cells.map((cell : any)=> {
-                    return (
-                      <TableCell {...cell.getCellProps()} onClick={() => handleCellClick(cell)}>
-                        {cell.render('Cell')}
-                      </TableCell>
-                    )
-                  })}
-                </TableRow>
-                )
-              })}
-            </TableBody>
-          </MaUTable> 
-          : null
-          }
-        </section>
-        <CustomColorLabelledOutline id="myID" label="Add Training Item">
-
-        <section className={classes.fieldWrapper}>
-          <TextField
-            className={classes.field}
-            label="Excercise"
-            variant="outlined"
-            value={item.excercise}
-            required
-            onChange={(event) => updateItem(event.target.value, "excercise")}
-          />
-          {
-            <span style={{opacity: 0}}> '     '</span>
-          }
-          <TextField
-            className={classes.field}
-            label="Stretching"
-            value={item.stretching}
-            variant="outlined"
-            onChange={(event) => updateItem(event.target.value, "stretching")}
-          />
-        </section>
-
-        <section className={classes.fieldWrapper}>
-          <TextField
-            className={classes.field}
-            label="Set"
-            type="number"
-            variant="outlined"
-            value={item.set}
-            required
-            onChange={(event) => updateItem(event.target.value, "set")}
-          />
-          {
-            <span style={{opacity: 0}}> '     '</span>
-          }
-          <TextField
-            className={classes.field}
-            label="Rep"
-            type="number"
-            variant="outlined"
-            value={item.rep}
-            required
-            onChange={(event) => updateItem(event.target.value, "rep")}
-          />
-        </section>
-
-        <section className={classes.fieldWrapper}>
-          <TextField
-            className={classes.field}
-            label="Tempo"
-            variant="outlined"
-            value={item.tempo}
-            required
-            onChange={(event) => updateItem(event.target.value, "tempo")}
-          />
-          {
-            <span style={{opacity: 0}}> '     '</span>
-          }
-          <TextField
-            className={classes.field}
-            label="Rest"
-            variant="outlined"
-            value={item.rest}
-            onChange={(event) => updateItem(event.target.value, "rest")}
-            required
-          />
-        </section>
-
-        <section className={classes.fieldWrapper}>
-          <TextField
-            className={classes.field}
-            label="Instructions"
-            variant="outlined"
-            value={item.instructions}
-            required
-            onChange={(event) => updateItem(event.target.value, "instructions")}
-          />
-          {
-            <span style={{opacity: 0}}> '     '</span>
-          }
-          <TextField
-            className={classes.field}
-            id="standard-select-gender"
-            select
-            label="Day"
-            value={item.day}
-            onChange={(event) => updateItem(event.target.value, "day")}
-            variant="outlined"
-          >
-            {days.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-            </TextField>
-        </section>
-        <div className={classes.action}>
-          <Button
-            variant="contained"
-            color="primary"
-            className={classes.submit}
-            onClick={() => addItem()}
-          >
-            Add Item
-          </Button>
+        <div>
+        <FormControl variant="outlined" className={classes.formControl}>
+        <Select
+          value={planId}
+          onChange={(event: any) => setPlanId(event.target.value)}
+        >
+          {workoutStore.plans.map((plan) => (
+            <MenuItem value={plan.id}>
+              {
+                <div className={classes.selectLabel}>
+                  <Typography
+                    variant={"body2"}
+                  >
+                    {plan.name}
+                  </Typography>
+                </div>
+              }
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
         </div>
-        </CustomColorLabelledOutline>
-        <section className={classes.fieldWrapper}>
-        <TextField
-            style={{marginTop: '2%'}}
-            className={classes.fullWidth}
-            label="Notes"
-            variant="outlined"
-            required
-            value={localSchedule.notes}
-            onChange={(event) => updateScheduleObj(event.target.value, "notes")}
-            multiline
-            rows={6}
-          />
-        </section>
         <FormGroup>
         <FormControlLabel 
           control={<Checkbox 
@@ -587,7 +347,7 @@ const TrainingForm = (props : {schedule : TrainingSchedule, customer_id: string}
       </form>
     </div>
   );
-};
+});
 
 
 export default TrainingForm;

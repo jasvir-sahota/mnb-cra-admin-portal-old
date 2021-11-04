@@ -12,6 +12,8 @@ import { useStore } from "../App";
 import { makeStyles } from "@mui/styles";
 import { ActiveComponent } from "../domain/App";
 import { useState } from "react";
+import { Person } from "@material-ui/icons";
+import { useNavigate } from "react-router";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -38,13 +40,17 @@ const useStyles = makeStyles((theme: Theme) => ({
 const NavList = observer(() => {
   const store = useStore();
   const classes = useStyles();
+  const navigate = useNavigate();
 
   return (
     <Box
       sx={{ width: 250 }}
     >
     <List>
-      <span onClick={() => store.appStore.active_component = ActiveComponent.Dashboard}>
+      <span onClick={() => {
+        store.appStore.active_component = ActiveComponent.Customer;
+        navigate('/');
+      }}>
         <ListItem button key={"home"}>
             <ListItemIcon classes = { { root: classes.listItemRoot}}>
               <Home />
@@ -52,7 +58,21 @@ const NavList = observer(() => {
             <ListItemText  primary={"Home"}  classes = { { root: classes.listItemTextRoot}}/>
         </ListItem>
       </span>
-      <span onClick={() => store.appStore.active_component = ActiveComponent.WorkoutPlans}>
+      <span onClick={() => {
+        store.appStore.active_component = ActiveComponent.Customer;
+        navigate('/');
+      }}>
+        <ListItem button key={"customer-view"}>
+            <ListItemIcon classes = { { root: classes.listItemRoot}}>
+              <Person />
+            </ListItemIcon>
+            <ListItemText primary={"Customers"} classes = { { root: classes.listItemTextRoot}}/>
+        </ListItem>
+      </span>
+      <span onClick={() => {
+        store.appStore.active_component = ActiveComponent.Customer;
+        navigate('/workout-plans');
+      }}>
         <ListItem button key={"workout-plans"}>
             <ListItemIcon classes = { { root: classes.listItemRoot}}>
               <Settings />
@@ -60,12 +80,17 @@ const NavList = observer(() => {
             <ListItemText primary={"Workout Plans"} classes = { { root: classes.listItemTextRoot}}/>
         </ListItem>
       </span>
+      <span onClick={() => {
+        store.appStore.active_component = ActiveComponent.Customer
+        navigate('/diet-plans')
+      }}>
       <ListItem button key={"diet-plans"}>
           <ListItemIcon classes = { { root: classes.listItemRoot}}>
             <ContactSupport />
           </ListItemIcon>
           <ListItemText primary={"Diet Plans"} classes = { { root: classes.listItemTextRoot}}/>
       </ListItem>
+      </span>
     </List>
   </Box>
   )
