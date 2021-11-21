@@ -38,8 +38,6 @@ export class DietStore {
 
   async saveDiet(Diet: any) {
     try {
-      console.log(Diet);
-
       if(Diet) {
         this.diet_status = NetworkStatus.Updating;
         await this._DietPlanRepo.saveDiet(Diet);

@@ -369,6 +369,7 @@ const RenderDiets = (props: { diets: any; callback: Function }) => {
   const handleCellClick = (cell: any) => {
     if (cell.column.id === "remove") {
       const localItemscopy = _.cloneDeep(workout_items);
+      localItemscopy.splice(cell.row.index, 1);
       localItemscopy.map((item: any, index: number) => item.item_id = index +  1);
       callback(localItemscopy);
       setWorkoutItems(localItemscopy);
