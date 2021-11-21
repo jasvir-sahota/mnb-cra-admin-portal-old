@@ -35,18 +35,17 @@ export class WorkoutStore {
   }
 
   async saveWorkout(workout: any) {
+    console.log(workout);
     try {
-      console.log(workout);
-
       if(workout) {
         this.workout_status = NetworkStatus.Updating;
-        const id = await this._workoutPlanRepo.saveWorkout(workout);
+        await this._workoutPlanRepo.saveWorkout(workout);
         const workout_copy : any = _.cloneDeep(workout);
-        workout_copy.workout_id = id;
         this.workouts = [...this.workouts, workout_copy];
         this.workout_status = NetworkStatus.Updated;
       }
     } catch (error) {
+      console.log(error);
       this.workout_status = NetworkStatus.UpdateFailed;
     }
   }
@@ -57,7 +56,10 @@ export class WorkoutStore {
     console.log(status);
     if (status) {
       this.plan_status = NetworkStatus.Updated;
-      this.fetchPlans();
+      
+      // Refresh plans
+      const plans = await this._workoutPlanRepo.getAllPlans();
+      this.plans = plans;
     } else {
       this.plan_status = NetworkStatus.UpdateFailed;
     }

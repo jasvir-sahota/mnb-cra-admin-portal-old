@@ -1,4 +1,4 @@
-import { ThemeProvider, Theme, Breadcrumbs, Typography } from "@mui/material";
+import { ThemeProvider, Theme } from "@mui/material";
 import theme from "./theme";
 import React, { createContext } from "react";
 import { RootStore } from "./store/RootStore";
@@ -6,10 +6,8 @@ import { observer } from "mobx-react-lite";
 import { BrowserRouter as Router, Route, useLocation, Routes } from "react-router-dom";
 import CustomersView from "./components/Customers";
 import Header from "./components/Header";
-import { ActiveComponent } from "./domain/App";
 import WorkoutPlans from "./components/WorkoutPlans";
 import WorkoutPlan from "./components/WorkoutPlan";
-import { makeStyles } from "@mui/styles";
 import DietPlans from "./components/DietPlans";
 import DietPlan from "./components/DietPlan";
 
@@ -21,25 +19,6 @@ const StoreProvider = ({ children }: { children: React.ReactElement }) => {
     <StoreContext.Provider value={rootStore}>{children} </StoreContext.Provider>
   );
 };
-
-const useStyles = makeStyles((theme: Theme) => ({
-  sideNav: {
-    [theme.breakpoints.down("xs")]: {
-      display: "none",
-    },
-  }, 
-  hzNav: {
-    display: "none",
-    [theme.breakpoints.down("xs")]: {
-      display: "block",
-    },
-  },
-  header: {
-    [theme.breakpoints.down("xs")]: {
-      display: "block",
-    },
-  },
-}));
 
 const useStore = () => {
   const store = React.useContext(StoreContext);

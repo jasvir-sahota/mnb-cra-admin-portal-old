@@ -59,6 +59,7 @@ export class WorkoutRepo implements IWorkoutPlanRepo {
 
   async saveWorkoutPlan(plan: any) : Promise<boolean> {
     try {
+      console.log(plan);
       const response = await axios.post(`${this.API_HOST}api/v1/admin/workout-plans/`, {
         ...plan,
         withCredentials: true,

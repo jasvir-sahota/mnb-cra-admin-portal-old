@@ -6,7 +6,7 @@ import { Tabs, Tab, Typography, Theme } from "@mui/material";
 import { a11yProps, TabPanel } from "./TabPanel";
 import clsx from "clsx";
 import React from "react";
-import { Dashboard, Person, Schedule, Payment, ContactSupport, Settings } from "@material-ui/icons";
+import { Dashboard, Person } from "@material-ui/icons";
 import Training from "./Training";
 import Diet from "./Diet";
 import { TrainingSchedule } from "../domain/TrainingSchedule";

@@ -83,7 +83,8 @@ const Training = (props: { schedules: TrainingSchedule[], customer_id: string })
       start_date: 'a',
       end_date: 'a',
       is_active: false,
-      plan_id: ''
+      items: [],
+      notes: []
     })
   }
 

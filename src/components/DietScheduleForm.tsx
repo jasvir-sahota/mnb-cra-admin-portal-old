@@ -12,6 +12,12 @@ import httpstatus from 'http-status';
 import { DietSchedule } from "../domain/DietSchedule";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../App";
+import { RenderDiets } from "./DietPlan";
+import { toJS } from "mobx";
+import { NetworkStatus } from "../domain/Customer";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
 
 const useStyles = makeStyles((theme: Theme) => ({
   backdrop: {
@@ -84,7 +90,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     width: '200px',
   },
   saveBtn: {
-    margin: '0 5% 0 0 ',
     width: '200px',
   },
   deleteBtn: {
@@ -108,6 +113,86 @@ type alertType = {
   message: string
 }
 
+const SaveTemplate = observer((props: { items: any }) => {
+  const { items } = props;
+  const { dietStore } = useStore();
+  const classes = useStyles();
+  const [alert, setAlert] = useState<alertType | null>(null);
+  const [template_name, setTemplateName] = useState<string>("");
+  const [workout_items, setWorkoutItems] = useState<any>([]);
+
+  const saveTemplate = () => {
+    if (template_name.trim() === "") {
+      setAlert({
+        severity: `error`,
+        message: "Template name is required",
+      });
+    } else {
+      const plan_obj = {
+        name: template_name,
+        items: workout_items,
+        notes: "[]",
+      };
+
+      dietStore.savePlan(plan_obj);
+    }
+  };
+
+  useEffect(() => {
+    setWorkoutItems(items)
+  }, [items]);
+
+  useEffect(() => {
+    switch (dietStore.plan_status) {
+      case NetworkStatus.Updated:
+        setAlert({
+          severity: "success",
+          message: "Sucessufully saved the template plan in the system",
+        });
+        break;
+
+      case NetworkStatus.UpdateFailed:
+        setAlert({
+          severity: "error",
+          message: "Failed to save the workout in system",
+        });
+        break;
+
+      default:
+        setAlert(null);
+        break;
+    }
+  }, [dietStore.plan_status]);
+
+  return (
+    <div>
+        {alert !== null ? (
+          <Alert className={classes.error} severity={alert.severity}>
+            {alert.message}
+          </Alert>
+        ) : null}
+      <TextField
+        className={classes.fullWidth}
+        style={{ margin: "2% 0 2% 0" }}
+        label="Plan Name"
+        variant="filled"
+        required
+        value={template_name}
+        onChange={(event: any) => setTemplateName(event.target.value)}
+      />
+      <Button
+        variant="contained"
+        className={classes.saveBtn}
+        color="warning"
+        onClick={() => saveTemplate()}
+        style={{width: '100%'}}
+      >
+        Save Template
+      </Button>
+    </div>
+  );
+});
+
 const DietScheduleForm = observer((props: { schedule: DietSchedule, customer_id: string }) => {
   const classes = useStyles();
   const { schedule } = props;
@@ -117,29 +202,30 @@ const DietScheduleForm = observer((props: { schedule: DietSchedule, customer_id:
     id,
     start_date, 
     end_date, 
-    plan_id,
-    is_active
+    is_active,
+    items
   } = schedule;
 
   const [alert, setAlert] = useState<alertType | null>(null);
   const [updating, setUpdating] = useState<any>();
   const [localSchedule, setSechedule] = useState<any>(schedule);
   const [isActive, setActive] = useState<boolean>(schedule.is_active);
-  const [planId, setPlanId] = useState<any>(schedule.plan_id);
+  const [plan, setPlan] = useState<any>();
+  const [diet_items, setDietItems] = useState<any>(items);
+  const [openTemplate, toggleTemplate] = useState<boolean>(false);
 
   useEffect(() => {
     const scheduleObj: any = {
       id,
       start_date: isNaN(Number(schedule.start_date)) ? String(moment().unix()) : start_date,
       end_date: isNaN(Number(schedule.end_date)) === true ? String(moment().add(15, 'days').unix()) : end_date,
-      plan_id,
       is_active: is_active
     };
 
     setSechedule(scheduleObj);
     setAlert(null);
     setActive(scheduleObj.is_active)
-    setPlanId(schedule.plan_id);
+    setDietItems(schedule.items);
   }, [schedule]);
 
   let { REACT_APP_API_HOST } = process.env;
@@ -189,8 +275,9 @@ const DietScheduleForm = observer((props: { schedule: DietSchedule, customer_id:
 
   const saveSchedule = () => {
     const scheduleCopy = _.cloneDeep(localSchedule);
-    scheduleCopy.plan_id = planId;
+    scheduleCopy.items = diet_items;
     scheduleCopy.is_active = isActive;
+    scheduleCopy.notes = plan ? toJS(plan).notes : schedule.notes;
 
     const result = _.values(scheduleCopy).find(value => {
       if (typeof value !== 'number' && typeof value !== 'boolean') {
@@ -200,7 +287,6 @@ const DietScheduleForm = observer((props: { schedule: DietSchedule, customer_id:
       }
     });
 
-    console.log(result, scheduleCopy);
     if (result !== undefined) {
       setAlert({
         severity: "error",
@@ -288,8 +374,14 @@ const DietScheduleForm = observer((props: { schedule: DietSchedule, customer_id:
         </section>
         <FormControl variant="outlined" className={classes.formControl}>
         <Select
-          value={planId}
-          onChange={(event: any) => setPlanId(event.target.value)}
+          value={plan ? plan.id : plan}
+          onChange={(event: any) => {
+            const plan = dietStore.plans.find(
+              (plan) => plan.id === event.target.value
+            );
+            setPlan(plan);
+            setDietItems(toJS(plan?.items));
+          }}
         >
           {dietStore.plans.map((plan) => (
             <MenuItem value={plan.id}>
@@ -306,6 +398,12 @@ const DietScheduleForm = observer((props: { schedule: DietSchedule, customer_id:
           ))}
         </Select>
       </FormControl>
+          <div>
+            <RenderDiets
+              diets={diet_items}
+              callback={setDietItems}
+            />
+          </div>
         <FormGroup>
           <FormControlLabel
             control={<Checkbox
@@ -342,6 +440,22 @@ const DietScheduleForm = observer((props: { schedule: DietSchedule, customer_id:
               </Button>
               : null
           }
+          {<span style={{ opacity: 0 }}> ' '</span>}
+            <Button
+              variant="contained"
+              className={classes.saveBtn}
+              color="info"
+              onClick={() => toggleTemplate(true)}
+            >
+              Save Template
+            </Button>
+            <Dialog open={openTemplate} onClose={() => toggleTemplate(false)}>
+              <DialogTitle>Save as new Template</DialogTitle>
+              <DialogContent>
+                <br />
+                <SaveTemplate items={diet_items} />
+              </DialogContent>
+            </Dialog>
         </div>
       </form>
     </div>

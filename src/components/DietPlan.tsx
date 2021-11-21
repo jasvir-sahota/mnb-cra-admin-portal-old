@@ -35,9 +35,9 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import { useEffect, useState } from "react";
-import { days } from "../utility/Util";
+import { days, reorder } from "../utility/Util";
 import withDialog from "../HOC/withDialog";
-import { useExpanded, useTable } from "react-table";
+import { Cell, useExpanded, useSortBy, useTable } from "react-table";
 import _, { last } from "lodash";
 import AddNewDiet from "./AddDiet";
 import { makeStyles } from "@mui/styles";
@@ -47,6 +47,11 @@ import { Delete } from "@material-ui/icons";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import diet_item_cols from "../utility/DietCols";
+import { RenderCell } from "./WorkoutPlan";
+import moment from "moment";
+import RbfDnd from "./React-bf-Dnd";
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+
 
 const useStyles = makeStyles((theme: Theme) => ({
   backdrop: {
@@ -117,6 +122,9 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   error: {
     margin: "0 0 2% 0",
+  },
+  zindex: {
+    zIndex: 0,
   },
 }));
 
@@ -292,25 +300,6 @@ const DaySelector = (props: { onChange: any }) => {
   );
 };
 
-const DaySelectorWithDialog = (props: {
-  onChange: any;
-  open: any;
-  setOpen: any;
-  fullWidth: boolean;
-  maxWidth: any;
-  title: any;
-}) => {
-  const { open, setOpen, title, maxWidth, fullWidth, onChange } = props;
-
-  const DayWithDialog = withDialog(DaySelector, {
-    open,
-    setOpen,
-    title,
-    maxWidth,
-    fullWidth,
-  });
-  return <DayWithDialog onChange={onChange} />;
-};
 
 const deleteRowColumn = () => {
   return {
@@ -329,72 +318,117 @@ const deleteRowColumn = () => {
   };
 };
 
+const moveRowColumn = () => {
+  return {
+    // Make an expander cell
+    Header: () => null, // No header
+    id: "move", // It needs an ID
+    accessor: "",
+    Cell: ({ row }: any) => (
+      // Use Cell to render an expander for each row.
+      // We can use the getToggleRowExpandedProps prop-getter
+      // to build the expander.
+      <span {...row.getToggleRowExpandedProps()}>
+        <DragIndicatorIcon />
+      </span>
+    ),
+  };
+};
+
 const RenderDiets = (props: { diets: any; callback: Function }) => {
   const { diets, callback } = props;
 
-  const [diet_items, setDietItems] = useState<any>(diets);
+  const [workout_items, setWorkoutItems] = useState<any>([]);
+  const [cell_mode, setCellMode] = useState<any>("default");
 
   useEffect(() => {
-    console.log("setting diet items");
-    setDietItems(diets);
+    setWorkoutItems(diets);
   }, [diets]);
 
-  const { getTableProps, headerGroups, rows, prepareRow } = useTable(
-    { columns: diet_item_cols, data: diet_items },
+  const { headerGroups, rows, prepareRow } = useTable(
+    {
+      columns: diet_item_cols,
+      data: workout_items,
+    },
+    useSortBy,
     useExpanded
   );
 
   const rm = diet_item_cols.find((tr: any) => tr.id === "remove");
+  const mv = diet_item_cols.find((tr: any) => tr.id === "move");
+
+
   if (!rm) {
     diet_item_cols.unshift(deleteRowColumn());
   }
 
+  if (!mv) {
+    diet_item_cols.unshift(moveRowColumn());
+  }
+
   const handleCellClick = (cell: any) => {
-    if (cell.column.id === "remove") {  
-      const localItemscopy = _.cloneDeep(diet_items);
-      //console.log(localItems, foundIndex)
-      //console.log(cell.row);
-      localItemscopy.splice(cell.row.index, 1);
+    if (cell.column.id === "remove") {
+      const localItemscopy = _.cloneDeep(workout_items);
+      localItemscopy.map((item: any, index: number) => item.item_id = index +  1);
       callback(localItemscopy);
-      setDietItems(localItemscopy);
+      setWorkoutItems(localItemscopy);
     }
   };
 
+  const updateChangedCell = (value: any, cell: any) => {
+    const localItemscopy = _.cloneDeep(workout_items);
+
+    localItemscopy[cell.row.index][cell.column.id] = value;
+    callback(localItemscopy);
+    setWorkoutItems(localItemscopy);
+  };
+
+  const handleDivBlur = (event: any) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setCellMode("default");
+    }
+  };
+
+  const onDragEnd = (result: any) => {
+    if (!result.destination) {
+      return;
+    }
+  
+    const items = reorder(
+      workout_items,
+      result.source.index,
+      result.destination.index
+    );
+
+    callback(items);
+    setWorkoutItems(items);
+  }
+
   return (
-    <div>
-      {diet_items.length > 0 ? (
+    <div tabIndex={0} onBlur={handleDivBlur}>
+      {workout_items.length > 0 ? (
         <TableContainer>
           <MuiTable>
             <MuiTableHead>
               {headerGroups.map((headerGroup) => (
                 <TableRow {...headerGroup.getHeaderGroupProps()}>
                   {headerGroup.headers.map((column) => (
-                    <TableCell {...column.getHeaderProps()}>
+                    <TableCell {...column.getHeaderProps(column.getSortByToggleProps())}>
                       {column.render("Header")}
                     </TableCell>
                   ))}
                 </TableRow>
               ))}
             </MuiTableHead>
-            <MuiTableBody>
-              {rows.map((row: any, i: any) => {
-                prepareRow(row);
-                return (
-                  <TableRow {...row.getRowProps()} key={row.original.day}>
-                    {row.cells.map((cell: any) => {
-                      return (
-                        <TableCell
-                          {...cell.getCellProps()}
-                          onClick={() => handleCellClick(cell)}
-                        >
-                          {cell.render("Cell")}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
-              })}
-            </MuiTableBody>
+            <RbfDnd
+                rows={rows}
+                prepareRow={prepareRow}
+                setCellMode={setCellMode}
+                handleCellClick={handleCellClick}
+                cell_mode={cell_mode}
+                updateChangedCell={updateChangedCell}
+                onDragEnd={onDragEnd}
+              />
           </MuiTable>
         </TableContainer>
       ) : null}
@@ -402,7 +436,7 @@ const RenderDiets = (props: { diets: any; callback: Function }) => {
   );
 };
 
-function AddDiet(props: { diets: any; callback: any, items?: any }) {
+const AddDiet = observer((props: { diets: any; callback: any, items?: any })  => {
   const { diets, callback, items } = props;
 
   const filter = createFilterOptions<typeof diets>();
@@ -411,6 +445,8 @@ function AddDiet(props: { diets: any; callback: any, items?: any }) {
 
   const [openDaySelector, toggleDaySelector] = useState(false);
   const [openNewDiet, toggleNewDiet] = useState(false);
+
+  const { dietStore } = useStore();
 
   useEffect(() => {
     setDietItems(items);
@@ -428,14 +464,13 @@ function AddDiet(props: { diets: any; callback: any, items?: any }) {
   });
 
   const onChange = (event: any, newValue: any) => {
-    if (newValue.find((el: any) => el.name.startsWith("Add"))) {
+    if (newValue.find((el: any) => el.food_item.startsWith("Add"))) {
       // timeout to avoid instant validation of the dialog's form.
-      setTimeout(() => {
-        toggleNewDiet(true);
-        setDialogValue({
-          name: newValue[newValue.length - 1].inputValue,
-        });
-      });
+      const el = newValue[newValue.length - 1].inputValue;
+      const obj = {
+        food_item: el.replace('Add','')
+      }
+      dietStore.saveDiet(obj); 
     } else if (newValue && newValue.inputValue) {
       toggleNewDiet(true);
       setDialogValue({
@@ -460,7 +495,6 @@ function AddDiet(props: { diets: any; callback: any, items?: any }) {
 
   const {
     getRootProps,
-    getInputLabelProps,
     getInputProps,
     getTagProps,
     getListboxProps,
@@ -475,14 +509,14 @@ function AddDiet(props: { diets: any; callback: any, items?: any }) {
     multiple: true,
     options: diets,
     value: optionValue,
-    getOptionLabel: (option: any) => option.name,
+    getOptionLabel: (option: any) => option.food_item,
     filterOptions: (options, params) => {
       const filtered = filter(options, params);
 
       if (params.inputValue !== "") {
         filtered.push({
           inputValue: params.inputValue,
-          name: `Add "${params.inputValue}"`,
+          food_item: `Add "${params.inputValue}"`,
         });
       }
 
@@ -496,24 +530,15 @@ function AddDiet(props: { diets: any; callback: any, items?: any }) {
       <div {...getRootProps()}>
         <InputWrapper ref={setAnchorEl} className={focused ? "focused" : ""}>
           {value.map((option: typeof diets, index: number) => (
-            <StyledTag label={option.name} {...getTagProps({ index })} />
+            <StyledTag label={option.food_item} {...getTagProps({ index })} />
           ))}
-          <input {...getInputProps()} />
+          <input {...getInputProps()} placeholder={"Search Food Item"} />
         </InputWrapper>
       </div>
       {groupedOptions.length > 0 ? (
         <Listbox {...getListboxProps()}>
           <TableContainer component={Paper}>
             <MuiTable>
-              <MuiTableHead>
-                <MuiTableRow>
-                  <MuiTableCell>Diet Name</MuiTableCell>
-                  <MuiTableCell>Food Item</MuiTableCell>
-                  <MuiTableCell>Instructions</MuiTableCell>
-                  <MuiTableCell>Day</MuiTableCell>
-                  <MuiTableCell>Time of Day</MuiTableCell>
-                </MuiTableRow>
-              </MuiTableHead>
               <MuiTableBody>
                 {(groupedOptions as typeof diets).map(
                   (option: any, index: any) => (
@@ -521,13 +546,9 @@ function AddDiet(props: { diets: any; callback: any, items?: any }) {
                       <MuiTableCell>
                         <li {...getOptionProps({ option, index })}>
                           {" "}
-                          {option.name}
+                          {option.food_item}
                         </li>
                       </MuiTableCell>
-                      <MuiTableCell>{option.food_item}</MuiTableCell>
-                      <MuiTableCell>{option.instructions}</MuiTableCell>
-                      <MuiTableCell>{option.day}</MuiTableCell>
-                      <MuiTableCell>{option.time}</MuiTableCell>
                     </MuiTableRow>
                   )
                 )}
@@ -543,8 +564,14 @@ function AddDiet(props: { diets: any; callback: any, items?: any }) {
           <DaySelector
             onChange={(event: any) => {
               let options = _.cloneDeep(optionValue);
-              const last_option = options[options.length - 1];
-              last_option.day = event.target.value;
+              let last_option = options[options.length - 1];
+              last_option = {
+                ...last_option,
+                day: event.target.value,
+                instructions: "None",
+                item_id: diet_items.length,
+                time: moment().unix()
+              };
               const copyItems = _.cloneDeep(diet_items);
               copyItems.push(last_option);
               setDietItems(copyItems);
@@ -574,7 +601,7 @@ function AddDiet(props: { diets: any; callback: any, items?: any }) {
       />
     </Root>
   );
-}
+});
 
 type alertType = {
   severity: any;
@@ -696,6 +723,9 @@ const DietPlan = observer((props: { plan?: any }) => {
               value={notes}
               onChange={(event: any) => setNotes(event.target.value)}
               rows={6}
+              classes={{
+                root: classes.zindex,
+              }}
             />
           </section>
 
@@ -716,3 +746,7 @@ const DietPlan = observer((props: { plan?: any }) => {
 });
 
 export default DietPlan;
+
+export {
+  RenderDiets
+}

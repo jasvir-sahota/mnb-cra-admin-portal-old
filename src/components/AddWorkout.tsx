@@ -145,7 +145,6 @@ const AddWorkout = observer((props: { name: any }) => {
       setItem(itemObj);
       const workout_obj = _.cloneDeep(item);
       workout_obj.name = name;
-      console.log(workout_obj);
       workoutStore.saveWorkout(workout_obj);
     }
   }

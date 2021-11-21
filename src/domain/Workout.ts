@@ -12,7 +12,7 @@ type Workout = {
 type WorkoutPlan = {
   id: string,
   name: string,
-  workout: Workout[] | []
+  items: Workout[] | []
 }
 
 type WorkoutSchedule = {

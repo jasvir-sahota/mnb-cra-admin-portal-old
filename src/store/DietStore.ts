@@ -42,10 +42,10 @@ export class DietStore {
 
       if(Diet) {
         this.diet_status = NetworkStatus.Updating;
-        const id = await this._DietPlanRepo.saveDiet(Diet);
+        await this._DietPlanRepo.saveDiet(Diet);
         const Diet_copy : any = _.cloneDeep(Diet);
-        Diet_copy.diet_id = id;
         this.diets = [...this.diets, Diet_copy];
+        console.log(this.diets);
         this.diet_status = NetworkStatus.Updated;
       }
     } catch (error) {
