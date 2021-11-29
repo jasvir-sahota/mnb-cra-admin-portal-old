@@ -32,26 +32,23 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import { useEffect, useState } from "react";
-import { days, reorder } from "../utility/Util";
-import {
-  useExpanded,
-  useTable,
-} from "react-table";
-import training_item_cols from "../utility/TrainingCols";
+import { days, removeSubElement, reorder, updateCell } from "../utility/Util";
+import { useExpanded, useTable } from "react-table";
+import training_item_cols from "../utility/TrainingCols.js";
 import _ from "lodash";
-import AddNewWorkout from "./AddWorkout";
 import { makeStyles } from "@mui/styles";
 import Alert from "@mui/lab/Alert";
 import { NetworkStatus } from "../domain/Customer";
-import { Delete } from "@material-ui/icons";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
-import DateAdapter from '@mui/lab/AdapterMoment';
-import moment from 'moment';
+import LocalizationProvider from "@mui/lab/LocalizationProvider";
+import DateAdapter from "@mui/lab/AdapterMoment";
+import moment from "moment";
 import { TimePicker } from "@mui/lab";
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import RbfDnd from "./React-bf-Dnd";
+import AddSuperset from "./AddSuperset";
+import SearchExercise from "./SearchExercise";
+import { v4 as uuidv4 } from 'uuid'; 
 
 const useStyles = makeStyles((theme: Theme) => ({
   backdrop: {
@@ -137,140 +134,6 @@ const Root = styled("div")(
 `
 );
 
-const InputWrapper = styled("div")(
-  ({ theme }) => `
-  width: 100%;
-  border: 1px solid grey;
-  background-color: ${theme.palette.mode === "dark" ? "#141414" : "#fff"};
-  border-radius: 1px;
-  padding: 1px;
-  display: flex;
-  flex-wrap: wrap;
-
-  &:hover {
-    border-color: ${theme.palette.mode === "dark" ? "#177ddc" : "#40a9ff"};
-  }
-
-  &.focused {
-    border-color: grey;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-  }
-
-  & input {
-    background-color: ${theme.palette.mode === "dark" ? "#141414" : "#fff"};
-    color: ${
-      theme.palette.mode === "dark"
-        ? "rgba(255,255,255,0.65)"
-        : "rgba(0,0,0,.85)"
-    };
-    height: 30px;
-    box-sizing: border-box;
-    padding: 4px 6px;
-    width: 0;
-    min-width: 30px;
-    flex-grow: 1;
-    border: 0;
-    margin: 0;
-    outline: 0;
-  }
-`
-);
-
-interface TagProps extends ReturnType<AutocompleteGetTagProps> {
-  label: string;
-}
-
-function Tag(props: TagProps) {
-  const { label, onDelete, ...other } = props;
-  return (
-    <div {...other}>
-      <span>{label}</span>
-      <CloseIcon onClick={onDelete} />
-    </div>
-  );
-}
-
-const StyledTag = styled(Tag)<TagProps>(
-  ({ theme }) => `
-  display: flex;
-  align-items: center;
-  height: 24px;
-  margin: 2px;
-  line-height: 22px;
-
-  border: 1px solid ${theme.palette.mode === "dark" ? "#303030" : "#e8e8e8"};
-  border-radius: 2px;
-  box-sizing: content-box;
-  padding: 0 4px 0 10px;
-  outline: 0;
-  overflow: hidden;
-
-  &:focus {
-    border-color: ${theme.palette.mode === "dark" ? "#177ddc" : "#40a9ff"};
-    background-color: ${theme.palette.mode === "dark" ? "#003b57" : "#e6f7ff"};
-  }
-
-  & span {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  & svg {
-    font-size: 12px;
-    cursor: pointer;
-    padding: 4px;
-  }
-`
-);
-
-const Listbox = styled("ul")(
-  ({ theme }) => `
-  width: 80%;
-  margin: 2px 0 0;
-  padding: 0;
-  position: absolute;
-  list-style: none;
-  background-color: ${theme.palette.mode === "dark" ? "#141414" : "#fff"};
-  overflow: auto;
-  max-height: 800px;
-  border-radius: 1px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1;
-
-  & li {
-    padding: 5px 12px;
-    display: flex;
-
-    & span {
-      flex-grow: 1;
-    }
-
-    & svg {
-      color: transparent;
-    }
-  }
-
-  & li[aria-selected='true'] {
-    background-color: ${theme.palette.mode === "dark" ? "#2b2b2b" : "#fafafa"};
-    font-weight: 600;
-
-    & svg {
-      color: #1890ff;
-    }
-  }
-
-  & li[data-focus='true'] {
-    background-color: ${theme.palette.mode === "dark" ? "#003b57" : "#e6f7ff"};
-    cursor: pointer;
-
-    & svg {
-      color: currentColor;
-    }
-  }
-`
-);
-
 const DaySelector = (props: { onChange: any }) => {
   const { onChange } = props;
 
@@ -294,50 +157,16 @@ const DaySelector = (props: { onChange: any }) => {
   );
 };
 
-const deleteRowColumn = () => {
-  return {
-    // Make an expander cell
-    Header: () => null, // No header
-    id: "remove", // It needs an ID
-    accessor: "",
-    Cell: ({ row }: any) => (
-      // Use Cell to render an expander for each row.
-      // We can use the getToggleRowExpandedProps prop-getter
-      // to build the expander.
-      <span {...row.getToggleRowExpandedProps()}>
-        <Delete style={{ color: "red" }} />
-      </span>
-    ),
-  };
-};
-
-const moveRowColumn = () => {
-  return {
-    // Make an expander cell
-    Header: () => null, // No header
-    id: "move", // It needs an ID
-    accessor: "",
-    Cell: ({ row }: any) => (
-      // Use Cell to render an expander for each row.
-      // We can use the getToggleRowExpandedProps prop-getter
-      // to build the expander.
-      <span {...row.getToggleRowExpandedProps()}>
-        <DragIndicatorIcon />
-      </span>
-    ),
-  };
-};
-
 const RenderCell = ({
   value,
   mode,
   callback,
-  field
+  field,
 }: {
   value: any;
   mode: any;
   callback: Function;
-  field?: any
+  field?: any;
 }) => {
   const classes = useStyles();
   const [val, setValue] = useState(value);
@@ -366,68 +195,95 @@ const RenderCell = ({
         onBlur={onBlur}
       />
     );
-  } else if (mode === "editable" && field === 'date') {
+  } else if (mode === "editable" && field === "date") {
     return (
       <LocalizationProvider dateAdapter={DateAdapter}>
-      <TimePicker
-        value={moment.unix(val)}
-        onChange={(value) => {
-          console.log(value)
-          setValue(String(moment(value).unix()));
-          callback(val);
-        }}
-        renderInput={(params) => <TextField variant="standard" className={classes.field} {...params} />}
-      />
-    </LocalizationProvider>
-    )
+        <TimePicker
+          value={moment.unix(val)}
+          onChange={(value) => {
+            setValue(String(moment(value).unix()));
+            callback(val);
+          }}
+          renderInput={(params) => (
+            <TextField
+              variant="standard"
+              className={classes.field}
+              {...params}
+            />
+          )}
+        />
+      </LocalizationProvider>
+    );
   } else {
-    return <span>{field === "date" ? moment.unix(value).format("hh:mm a") : value}</span>;
+    return (
+      <span>
+        {field === "date" ? moment.unix(value).format("hh:mm a") : value}
+      </span>
+    );
   }
 };
 
 const RenderWorkouts = (props: { workouts: any; callback: Function }) => {
   const { workouts, callback } = props;
 
-  const [workout_items, setWorkoutItems] = useState<any>([]);
+  const [workout_items, setWorkoutItems] = useState<any>(workouts);
   const [cell_mode, setCellMode] = useState<any>("default");
+  const [openSubset, toggleSubset] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<number | undefined>();
+  
+  console.log('render component re-rendered', workout_items);
 
   useEffect(() => {
+    console.log('workout items updated', workouts);
     setWorkoutItems(workouts);
-  }, [workouts]);
+  }, [workouts]); 
+
+  const supersetCallback = (rowId: number, exercise: string) => { 
+    const localItemscopy = _.cloneDeep(workout_items);
+    const item = localItemscopy[rowId];
+    const superset = uuidv4();
+
+    if(item !== undefined) {
+      item.superset = item.superset ? item.superset : superset;
+      
+      item.subRows.push({
+        item_id: item.subRows.length + 1,
+        superset_seq: item.subRows.length + 1,
+        superset: item.superset,
+        day: item.day,
+        rep: 5,
+        excercise: exercise
+      });
+    }
+    setWorkoutItems(localItemscopy);
+    callback(localItemscopy);
+  };
 
   const { headerGroups, rows, prepareRow } = useTable(
     {
       columns: training_item_cols,
       data: workout_items,
+      expandSubRows: true,
     },
     useExpanded
   );
 
-  const rm = training_item_cols.find((tr: any) => tr.id === "remove");
-  const mv = training_item_cols.find((tr: any) => tr.id === "move");
-
-  if (!rm) {
-    training_item_cols.unshift(deleteRowColumn());
-  }
-
-  if (!mv) {
-    training_item_cols.unshift(moveRowColumn());
-  }
+  console.log('rows',rows);
 
   const handleCellClick = (cell: any) => {
     if (cell.column.id === "remove") {
-      const localItemscopy = _.cloneDeep(workout_items);
-      localItemscopy.splice(cell.row.index, 1);
-      localItemscopy.map((item: any, index: number) => item.item_id = index +  1);
-      callback(localItemscopy);
-      setWorkoutItems(localItemscopy);
+      const items = removeSubElement(workout_items, cell.row.id);
+      callback(items);
+      setWorkoutItems(items);
+    } else if (cell.column.id === "add") {
+      toggleSubset(true);
+      setSelectedRow(cell.row.index);
     }
   };
 
   const updateChangedCell = (value: any, cell: any) => {
-    const localItemscopy = _.cloneDeep(workout_items);
+    const localItemscopy = updateCell(workout_items, cell.row.id, cell.column.id, value)
 
-    localItemscopy[cell.row.index][cell.column.id] = value;
     callback(localItemscopy);
     setWorkoutItems(localItemscopy);
   };
@@ -442,7 +298,7 @@ const RenderWorkouts = (props: { workouts: any; callback: Function }) => {
     if (!result.destination) {
       return;
     }
-  
+
     const items = reorder(
       workout_items,
       result.source.index,
@@ -451,7 +307,7 @@ const RenderWorkouts = (props: { workouts: any; callback: Function }) => {
 
     callback(items);
     setWorkoutItems(items);
-  }
+  };
 
   return (
     <div tabIndex={0} onBlur={handleDivBlur}>
@@ -469,194 +325,108 @@ const RenderWorkouts = (props: { workouts: any; callback: Function }) => {
                 </TableRow>
               ))}
             </MuiTableHead>
-              <RbfDnd
-                rows={rows}
-                prepareRow={prepareRow}
-                setCellMode={setCellMode}
-                handleCellClick={handleCellClick}
-                cell_mode={cell_mode}
-                updateChangedCell={updateChangedCell}
-                onDragEnd={onDragEnd}
-              />
+            <RbfDnd
+              rows={rows}
+              prepareRow={prepareRow}
+              setCellMode={setCellMode}
+              handleCellClick={handleCellClick}
+              cell_mode={cell_mode}
+              updateChangedCell={updateChangedCell}
+              onDragEnd={onDragEnd}
+            />
           </MuiTable>
         </TableContainer>
       ) : null}
+      <Dialog 
+        open={openSubset} 
+        onClose={() => toggleSubset(false)}
+        maxWidth={"lg"} 
+        fullWidth={true}
+      >
+        <DialogTitle>Add excercise to the Superset</DialogTitle>
+        <DialogContent
+        style={{
+          minHeight: '500px'
+        }}
+        >
+          <br />
+          {
+            selectedRow !== undefined ?
+            <AddSuperset 
+              rowId={selectedRow}
+              callback={supersetCallback} 
+            /> : null
+          }
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-const AddWorkout = observer((props: { workouts: any; callback: any; items?: any }) => {
-  const { workouts, callback, items } = props;
+const AddWorkout = observer(
+  (props: { workouts: any; callback: any; items?: any }) => {
+    const { callback, items } = props;
 
-  const filter = createFilterOptions<typeof workouts>();
-  const [optionValue, setOptionValue] = useState<any>([]);
-  const [workout_items, setWorkoutItems] = useState<any>(items ? items : []);
+    const [workout_items, setWorkoutItems] = useState<any>(items ? items : []);
 
-  const [openDaySelector, toggleDaySelector] = useState(false);
-  const [openNewWorkout, toggleNewWorkout] = useState(false);
+    const [openDaySelector, toggleDaySelector] = useState(false);
+    const [selectedExercise, setExercise] = useState<string>("");
 
-  const { workoutStore } = useStore();
+    useEffect(() => {
+      setWorkoutItems(items);
+    }, [items]);
 
-  useEffect(() => {
-    setWorkoutItems(items);
-  }, [items]);
-
-  const handleClose = () => {
-    setDialogValue({
-      name: "",
-    });
-    toggleNewWorkout(false);
-  };
-
-  const [dialogValue, setDialogValue] = useState({
-    name: "",
-  });
-
-  const onChange = (event: any, newValue: any) => {
-    if (newValue.find((el: any) => el.excercise.startsWith("Add"))) {
-      // timeout to avoid instant validation of the dialog's form.
-      const el = newValue[newValue.length - 1].inputValue;
-      const obj = {
-        excercise: el.replace('Add','')
-      }
-      workoutStore.saveWorkout(obj); 
-    } else if (newValue && newValue.inputValue) {
-      toggleNewWorkout(true);
-      setDialogValue({
-        name: newValue.inputValue,
-      });
-    } else if (newValue.length < optionValue.length) {
-      setOptionValue(newValue);
-      const copyItems = _.cloneDeep(workout_items);
-      const removedEl = copyItems.find((el: any) => !newValue.includes(el));
-      console.log(removedEl);
-      const index = copyItems.findIndex(
-        (item: any) => item.name === removedEl.name
-      );
-      copyItems.splice(index, 1);
-      setWorkoutItems(copyItems);
-      callback(copyItems);
-    } else {
+    const onSearchExercise = (exercise: string) => {
+      setExercise(exercise);
       toggleDaySelector(true);
-      setOptionValue(newValue);
-    }
-  };
+    };
 
-  const {
-    getRootProps,
-    getInputProps,
-    getTagProps,
-    getListboxProps,
-    getOptionProps,
-    groupedOptions,
-    value,
-    focused,
-    setAnchorEl,
-  } = useAutocomplete({
-    id: "customized-hook-demo",
-    //defaultValue: [top100Films[1]],
-    multiple: true,
-    options: workouts,
-    value: optionValue,
-    getOptionLabel: (option: any) => option.excercise,
-    filterOptions: (options, params) => {
-      const filtered = filter(options, params);
+    return (
+      <Root>
+        <div>
+          <SearchExercise callback={onSearchExercise} />
+        </div>
+        <Dialog open={openDaySelector} onClose={() => toggleDaySelector(false)}>
+          <DialogTitle>Select a Day for workout</DialogTitle>
+          <DialogContent>
+            <br />
+            <DaySelector
+              onChange={(event: any) => {
+                const workout_item: any = {
+                  excercise: selectedExercise,
+                  day: event.target.value,
+                  set: "5",
+                  rep: "5",
+                  tempo: "1:2",
+                  stretching: "N/A",
+                  rest: "60 seconds",
+                  instructions: "None",
+                  expanded: true,
+                  superset: uuidv4(),
+                  item_id: workout_items.length,
+                  subRows: []
+                };
 
-      if (params.inputValue !== "") {
-        filtered.push({
-          inputValue: params.inputValue,
-          excercise: `Add "${params.inputValue}"`,
-        });
-      }
+                const copyItems = _.cloneDeep(workout_items);
+                copyItems.push(workout_item);
 
-      return filtered;
-    },
-    onChange: onChange,
-  });
-
-  return (
-    <Root>
-      <div {...getRootProps()}>
-        <InputWrapper ref={setAnchorEl} className={focused ? "focused" : ""}>
-          {value.map((option: typeof workouts, index: number) => (
-            <StyledTag label={option.excercise} {...getTagProps({ index })} />
-          ))}
-          <input {...getInputProps()} placeholder={"Search Exercise"} />
-        </InputWrapper>
-      </div>
-      {groupedOptions.length > 0 ? (
-        <Listbox {...getListboxProps()}>
-          <TableContainer component={Paper}>
-            <MuiTable>
-              <MuiTableBody>
-                {(groupedOptions as typeof workouts).map(
-                  (option: any, index: any) => (
-                    <MuiTableRow key={index}>
-                      <MuiTableCell>
-                        <li {...getOptionProps({ option, index })}>
-                          {" "}
-                          {option.excercise}
-                        </li>
-                      </MuiTableCell>
-                    </MuiTableRow>
-                  )
-                )}
-              </MuiTableBody>
-            </MuiTable>
-          </TableContainer>
-        </Listbox>
-      ) : null}
-      <Dialog open={openDaySelector} onClose={() => toggleDaySelector(false)}>
-        <DialogTitle>Select a Day for workout</DialogTitle>
-        <DialogContent>
-          <br />
-          <DaySelector
-            onChange={(event: any) => {
-              let options = _.cloneDeep(optionValue);
-              let last_option = options[options.length - 1];
-
-              last_option = {
-                ...last_option,
-                day: event.target.value,
-                set: "5",
-                rep: "5",
-                tempo: "1:2",
-                stretching: "N/A",
-                rest: "60 seconds",
-                instructions: "None",
-                item_id: workout_items.length
-              };
-
-              const copyItems = _.cloneDeep(workout_items);
-              copyItems.push(last_option);
-              setWorkoutItems(copyItems);
-              callback(copyItems);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={openNewWorkout}
-        onClose={handleClose}
-        maxWidth={"lg"}
-        fullWidth={true}
-      >
-        <DialogTitle>Create a new Workout </DialogTitle>
-        <DialogContent>
-          <br />
-          <AddNewWorkout name={dialogValue.name} />
-        </DialogContent>
-      </Dialog>
-      <RenderWorkouts
-        workouts={workout_items}
-        callback={(workout_items: any) => {
-          setWorkoutItems(workout_items);
-          callback(workout_items);
-        }}
-      />
-    </Root>
-  );
-});
+                setWorkoutItems(copyItems);
+                callback(copyItems);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+        <RenderWorkouts
+          workouts={workout_items}
+          callback={(workout_items: any) => {
+            setWorkoutItems(workout_items);
+            callback(workout_items);
+          }}
+        />
+      </Root>
+    );
+  }
+);
 
 type alertType = {
   severity: any;
@@ -670,9 +440,9 @@ const WorkoutPlan = observer((props: { plan?: any }) => {
   const classes = useStyles();
   const [alert, setAlert] = useState<alertType | null>();
 
-  const [workout_items, setWorkoutItems] = useState<any>([]);
-  const [notes, setNotes] = useState<any>("");
-  const [workout_name, setWorkoutName] = useState<any>("");
+  const [workout_items, setWorkoutItems] = useState<any>(plan ? plan.items : []);
+  const [notes, setNotes] = useState<any>(plan ? plan.notes.join("\n").toString() : "");
+  const [workout_name, setWorkoutName] = useState<any>(plan ? plan.name : '');
 
   const navigate = useNavigate();
 
@@ -698,16 +468,7 @@ const WorkoutPlan = observer((props: { plan?: any }) => {
     }
   }, [workoutStore.plan_status]);
 
-  useEffect(() => {
-    if (plan) {
-      setWorkoutItems(plan.items);
-      setNotes(plan.notes.join("\n").toString());
-      setWorkoutName(plan.name);
-    }
-  }, [plan]);
-
   const savePlan = () => {
-    console.log(workout_items);
     if (workout_items.length === 0) {
       setAlert({
         severity: `error`,
@@ -729,7 +490,7 @@ const WorkoutPlan = observer((props: { plan?: any }) => {
         workouts: workout_items,
         notes: JSON.stringify(notes.split("\n")),
       };
-
+      console.log(plan_obj);
       workoutStore.savePlan(plan_obj);
     }
   };
@@ -810,4 +571,4 @@ const WorkoutPlan = observer((props: { plan?: any }) => {
 
 export default WorkoutPlan;
 
-export { RenderWorkouts, RenderCell };
+export { RenderWorkouts, RenderCell, DaySelector };

@@ -8,7 +8,7 @@ import _ from 'lodash';
 export class WorkoutStore {
   _workoutPlanRepo : IWorkoutPlanRepo;
   _rootStore: RootStore;
-  plans: WorkoutPlan[] | [] = [];
+  plans: any[] | [] = [];
   workouts: any[] | [] = [];
   network_status = NetworkStatus.Loading;
   workout_status = NetworkStatus.Loading;
@@ -35,7 +35,6 @@ export class WorkoutStore {
   }
 
   async saveWorkout(workout: any) {
-    console.log(workout);
     try {
       if(workout) {
         this.workout_status = NetworkStatus.Updating;

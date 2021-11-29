@@ -6,13 +6,15 @@ type Workout = {
   excercise: string,
   instructions: string,
   tempo: string,
-  rest: string
+  rest: string,
+  item_id?: string
 }
 
 type WorkoutPlan = {
   id: string,
   name: string,
-  items: Workout[] | []
+  items: Workout[] | [],
+  notes?: string[]
 }
 
 type WorkoutSchedule = {

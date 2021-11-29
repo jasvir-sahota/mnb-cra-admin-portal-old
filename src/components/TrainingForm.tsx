@@ -25,12 +25,14 @@ import axios from "axios";
 import httpstatus from "http-status";
 import { observer } from "mobx-react";
 import { useStore } from "../App";
-import { RenderWorkouts } from "./WorkoutPlan";
+import { DaySelector, RenderWorkouts } from "./WorkoutPlan";
 import { toJS } from "mobx";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import { NetworkStatus } from "../domain/Customer";
+import SearchExercise from "./SearchExercise";
+import { v4 as uuidv4 } from 'uuid'; 
 
 const useStyles = makeStyles((theme: Theme) => ({
   backdrop: {
@@ -219,6 +221,8 @@ const TrainingForm = observer(
     const [workout_items, setWorkoutItems] = useState<any>(items);
     const [plan, setPlan] = useState<any>();
     const [openTemplate, toggleTemplate] = useState<boolean>(false);
+    const [selectedExercise, setExercise] = useState<string>("");
+    const [openDaySelector, toggleDaySelector] = useState(false);
 
     useEffect(() => {
       const scheduleObj: any = {
@@ -238,6 +242,11 @@ const TrainingForm = observer(
       setActive(scheduleObj.is_active);
       setWorkoutItems(schedule.items);
     }, [schedule]);
+
+    const onSearchExercise = (exercise: string) => {
+      setExercise(exercise);
+      toggleDaySelector(true);
+    };
 
     let { REACT_APP_API_HOST } = process.env;
 
@@ -290,7 +299,7 @@ const TrainingForm = observer(
       scheduleCopy.items = workout_items;
       scheduleCopy.is_active = isActive;
       scheduleCopy.notes = plan ? toJS(plan).notes : schedule.notes;
-
+      console.log(scheduleCopy);
       const result = _.values(scheduleCopy).find((value) => {
         if (typeof value !== "number" && typeof value !== "boolean") {
           return _.isEmpty(value);
@@ -425,6 +434,38 @@ const TrainingForm = observer(
               </Select>
             </FormControl>
           </div>
+          <div>
+            <SearchExercise callback={onSearchExercise} />
+          </div>
+          <Dialog open={openDaySelector} onClose={() => toggleDaySelector(false)}>
+          <DialogTitle>Select a Day for workout</DialogTitle>
+          <DialogContent>
+            <br />
+            <DaySelector
+              onChange={(event: any) => {
+                const workout_item: any = {
+                  excercise: selectedExercise,
+                  day: event.target.value,
+                  set: "5",
+                  rep: "5",
+                  tempo: "1:2",
+                  stretching: "N/A",
+                  rest: "60 seconds",
+                  instructions: "None",
+                  expanded: true,
+                  superset: uuidv4(),
+                  item_id: workout_items.length,
+                  subRows: []
+                };
+
+                const copyItems = _.cloneDeep(workout_items);
+                copyItems.push(workout_item);
+
+                setWorkoutItems(copyItems);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
           <div>
             <RenderWorkouts
               workouts={workout_items}
