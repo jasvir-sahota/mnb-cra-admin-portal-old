@@ -174,19 +174,23 @@ const SearchExercise = observer(({
   callback: Function
 }) => {
   const filter = createFilterOptions<typeof workouts>();
+  const [option, setOption] = useState<any>([]);
 
   const { workoutStore } = useStore();
   const workouts : any = toJS(workoutStore.workouts);
 
   const onChange = (event: any, newValue: any) => {
+    console.log(event);
     if (newValue.find((el: any) => el.excercise.startsWith("Add"))) {
       const el = newValue[newValue.length - 1].inputValue;
+      console.log(el);
       const obj = {
-        excercise: el.replace('Add','')
+        excercise: el
       }
       workoutStore.saveWorkout(obj);
-    } else {
-      callback(newValue[0].excercise);
+    } else if(newValue.length !== 0){
+      callback(newValue[newValue.length - 1].excercise);
+      setOption([]);
     }
   };
 
@@ -204,7 +208,7 @@ const SearchExercise = observer(({
     id: "search-exercise",
     multiple: true,
     options: workouts,
-    value: [],
+    value: option,
     getOptionLabel: (option: any) => option.excercise,
     filterOptions: (options, params) => {
       const filtered = filter(options, params);
