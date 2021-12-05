@@ -4,6 +4,7 @@ import { TrainingSchedule } from "./TrainingSchedule";
 import { Profile } from "./Profile";
 
 enum NetworkStatus {
+  NotInitiated,
   Loading,
   Loaded,
   LoadingFailed,

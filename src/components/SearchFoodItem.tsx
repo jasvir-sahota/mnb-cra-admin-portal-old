@@ -162,26 +162,26 @@ const Listbox = styled("ul")(
 `
 );
 
-const SearchExercise = observer(({
+const SearchFoodItem = observer(({
   callback
 } : {
   callback: Function
 }) => {
-  const filter = createFilterOptions<typeof workouts>();
+  const filter = createFilterOptions<typeof diets>();
   const [option, setOption] = useState<any>([]);
 
-  const { workoutStore } = useStore();
-  const workouts : any = toJS(workoutStore.workouts);
+  const { dietStore } = useStore();
+  const diets : any = toJS(dietStore.diets);
 
   const onChange = (event: any, newValue: any) => {
-    if (newValue.find((el: any) => el.excercise.startsWith("Add"))) {
+    if (newValue.find((el: any) => el.food_item.startsWith("Add"))) {
       const el = newValue[newValue.length - 1].inputValue;
       const obj = {
-        excercise: el
+        food_item: el
       }
-      workoutStore.saveWorkout(obj);
+      dietStore.saveDiet(obj);
     } else if(newValue.length !== 0){
-      callback(newValue[newValue.length - 1].excercise);
+      callback(newValue[newValue.length - 1].food_item);
       setOption([]);
     }
   };
@@ -197,18 +197,18 @@ const SearchExercise = observer(({
     focused,
     setAnchorEl,
   } = useAutocomplete({
-    id: "search-exercise",
+    id: "search-food-item",
     multiple: true,
-    options: workouts,
+    options: diets,
     value: option,
-    getOptionLabel: (option: any) => option.excercise,
+    getOptionLabel: (option: any) => option.food_item,
     filterOptions: (options, params) => {
       const filtered = filter(options, params);
 
       if (params.inputValue !== "") {
         filtered.push({
           inputValue: params.inputValue,
-          excercise: `Add "${params.inputValue}"`,
+          food_item: `Add "${params.inputValue}"`,
         });
       }
 
@@ -222,10 +222,10 @@ const SearchExercise = observer(({
     <Root>
       <div {...getRootProps()}>
         <InputWrapper ref={setAnchorEl} className={focused ? "focused" : ""}>
-          {value.map((option: typeof workouts, index: number) => (
-            <StyledTag label={option.excercise} {...getTagProps({ index })} />
+          {value.map((option: typeof diets, index: number) => (
+            <StyledTag label={option.food_item} {...getTagProps({ index })} />
           ))}
-          <input {...getInputProps()} placeholder={"Search Exercise"} />
+          <input {...getInputProps()} placeholder={"Search Food Item"} />
         </InputWrapper>
       </div>
       {groupedOptions.length > 0 ? (
@@ -233,13 +233,13 @@ const SearchExercise = observer(({
           <TableContainer component={Paper}>
             <MuiTable>
               <MuiTableBody>
-                {(groupedOptions as typeof workouts).map(
+                {(groupedOptions as typeof diets).map(
                   (option: any, index: any) => (
                     <MuiTableRow key={index}>
                       <MuiTableCell>
                         <li {...getOptionProps({ option, index })}>
                           {" "}
-                          {option.excercise}
+                          {option.food_item}
                         </li>
                       </MuiTableCell>
                     </MuiTableRow>
@@ -254,4 +254,4 @@ const SearchExercise = observer(({
   )
 });
 
-export default SearchExercise;
+export default SearchFoodItem;

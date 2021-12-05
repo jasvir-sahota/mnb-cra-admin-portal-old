@@ -27,13 +27,15 @@ import {
   TableRow,
   TextField,
   Theme,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import { useEffect, useState } from "react";
 import { days, removeSubElement, reorder, updateCell } from "../utility/Util";
-import { useExpanded, useTable } from "react-table";
+import { useExpanded, useFilters, useTable } from "react-table";
 import training_item_cols from "../utility/TrainingCols.js";
 import _ from "lodash";
 import { makeStyles } from "@mui/styles";
@@ -48,7 +50,9 @@ import { TimePicker } from "@mui/lab";
 import RbfDnd from "./React-bf-Dnd";
 import AddSuperset from "./AddSuperset";
 import SearchExercise from "./SearchExercise";
-import { v4 as uuidv4 } from 'uuid'; 
+import { v4 as uuidv4 } from 'uuid';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import FilterBar from "./FilterExercise";
 
 const useStyles = makeStyles((theme: Theme) => ({
   backdrop: {
@@ -123,13 +127,33 @@ const useStyles = makeStyles((theme: Theme) => ({
   zindex: {
     zIndex: 0,
   },
+  thumb: {
+    position: "relative",
+    display: "inline-flex",
+    marginBottom: 8,
+    marginRight: 8,
+    width: 60,
+    height: 60,
+    padding: 4,
+    boxSizing: "border-box",
+    cursor: 'pointer'
+  },
+  thumbInner: {
+    display: "flex",
+    minWidth: 0,
+    overflow: "hidden"
+  },
+  img: {
+    display: "block",
+    width: "auto",
+    height: "100%"
+  },
 }));
 
 const Root = styled("div")(
   ({ theme }) => `
-  color: ${
-    theme.palette.mode === "dark" ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,.85)"
-  };
+  color: ${theme.palette.mode === "dark" ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,.85)"
+    };
   font-size: 14px;
 `
 );
@@ -214,7 +238,28 @@ const RenderCell = ({
         />
       </LocalizationProvider>
     );
-  } else {
+  } else if (field === 'image') {
+    return (
+      <div className={classes.thumb}>
+        <div className={classes.thumbInner}>
+          {
+            val !== null && val !== undefined ?
+              <img className={classes.img} src={val} alt={'thumbnail'} />
+              :
+              <div>
+                <Tooltip title={"Exercise doesn't have an image. Upload one."}>
+                  <CloudUploadIcon
+                    style={{ width: '100%', height: '100%' }}
+                    color={'success'}
+                  />
+                </Tooltip>
+              </div>
+          }
+        </div>
+      </div>
+    )
+  }
+  else {
     return (
       <span>
         {field === "date" ? moment.unix(value).format("hh:mm a") : value}
@@ -230,22 +275,20 @@ const RenderWorkouts = (props: { workouts: any; callback: Function }) => {
   const [cell_mode, setCellMode] = useState<any>("default");
   const [openSubset, toggleSubset] = useState(false);
   const [selectedRow, setSelectedRow] = useState<number | undefined>();
-  
-  console.log('render component re-rendered', workout_items);
+  const [filteredColumn, setFilteredColumn] = useState<string | undefined>();
 
   useEffect(() => {
-    console.log('workout items updated', workouts);
     setWorkoutItems(workouts);
-  }, [workouts]); 
+  }, [workouts]);
 
-  const supersetCallback = (rowId: number, exercise: string) => { 
+  const supersetCallback = (rowId: number, exercise: string) => {
     const localItemscopy = _.cloneDeep(workout_items);
     const item = localItemscopy[rowId];
     const superset = uuidv4();
 
-    if(item !== undefined) {
+    if (item !== undefined) {
       item.superset = item.superset ? item.superset : superset;
-      
+
       item.subRows.push({
         item_id: item.subRows.length + 1,
         superset_seq: item.subRows.length + 1,
@@ -259,16 +302,16 @@ const RenderWorkouts = (props: { workouts: any; callback: Function }) => {
     callback(localItemscopy);
   };
 
-  const { headerGroups, rows, prepareRow } = useTable(
+  const { headerGroups, rows, prepareRow, setFilter } = useTable(
     {
       columns: training_item_cols,
       data: workout_items,
       expandSubRows: true,
+      autoResetFilters: false
     },
-    useExpanded
+    useExpanded,
+    useFilters
   );
-
-  console.log('rows',rows);
 
   const handleCellClick = (cell: any) => {
     if (cell.column.id === "remove") {
@@ -309,56 +352,79 @@ const RenderWorkouts = (props: { workouts: any; callback: Function }) => {
     setWorkoutItems(items);
   };
 
+  const onFilter = (e : any, column_id: string) => {
+    const value = e.target.value || undefined;
+    
+    if(filteredColumn !== column_id && filteredColumn !== undefined) {
+      setFilter(filteredColumn, undefined);  
+    }
+
+    setFilter(column_id, value);
+    setFilteredColumn(column_id);
+  };
+
   return (
-    <div tabIndex={0} onBlur={handleDivBlur}>
-      {workout_items.length > 0 ? (
-        <TableContainer>
-          <MuiTable>
-            <MuiTableHead>
-              {headerGroups.map((headerGroup) => (
-                <TableRow {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map((column) => (
-                    <TableCell {...column.getHeaderProps()}>
-                      {column.render("Header")}
-                    </TableCell>
+    <div>
+      <div style={{ margin: '2% 0 0 0'}}>
+        <FilterBar
+          label={'Filter Exercises'}
+          onChange={onFilter}
+          columns={training_item_cols}
+          defaultFilter={training_item_cols.find(tr => tr.accessor === 'excercise') as {Header : string, accessor : string}}
+        />
+      </div>
+      <div tabIndex={0} onBlur={handleDivBlur}>
+        {workout_items.length > 0 ? (
+          <Paper elevation={3} style={{margin: '2% 0 0 0'}}>
+            <TableContainer>
+              <MuiTable>
+                <MuiTableHead>
+                  {headerGroups.map((headerGroup) => (
+                    <TableRow {...headerGroup.getHeaderGroupProps()}>
+                      {headerGroup.headers.map((column) => (
+                        <TableCell {...column.getHeaderProps()}>
+                          {column.render("Header")}
+                        </TableCell>
+                      ))}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))}
-            </MuiTableHead>
-            <RbfDnd
-              rows={rows}
-              prepareRow={prepareRow}
-              setCellMode={setCellMode}
-              handleCellClick={handleCellClick}
-              cell_mode={cell_mode}
-              updateChangedCell={updateChangedCell}
-              onDragEnd={onDragEnd}
-            />
-          </MuiTable>
-        </TableContainer>
-      ) : null}
-      <Dialog 
-        open={openSubset} 
-        onClose={() => toggleSubset(false)}
-        maxWidth={"lg"} 
-        fullWidth={true}
-      >
-        <DialogTitle>Add excercise to the Superset</DialogTitle>
-        <DialogContent
-        style={{
-          minHeight: '500px'
-        }}
+                </MuiTableHead>
+                <RbfDnd
+                  rows={rows}
+                  prepareRow={prepareRow}
+                  setCellMode={setCellMode}
+                  handleCellClick={handleCellClick}
+                  cell_mode={cell_mode}
+                  updateChangedCell={updateChangedCell}
+                  onDragEnd={onDragEnd}
+                />
+              </MuiTable>
+            </TableContainer>
+          </Paper>
+        ) : null}
+        <Dialog
+          open={openSubset}
+          onClose={() => toggleSubset(false)}
+          maxWidth={"lg"}
+          fullWidth={true}
         >
-          <br />
-          {
-            selectedRow !== undefined ?
-            <AddSuperset 
-              rowId={selectedRow}
-              callback={supersetCallback} 
-            /> : null
-          }
-        </DialogContent>
-      </Dialog>
+          <DialogTitle>Add excercise to the Superset</DialogTitle>
+          <DialogContent
+            style={{
+              minHeight: '500px'
+            }}
+          >
+            <br />
+            {
+              selectedRow !== undefined ?
+                <AddSuperset
+                  rowId={selectedRow}
+                  callback={supersetCallback}
+                /> : null
+            }
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
@@ -490,7 +556,6 @@ const WorkoutPlan = observer((props: { plan?: any }) => {
         workouts: workout_items,
         notes: JSON.stringify(notes.split("\n")),
       };
-      console.log(plan_obj);
       workoutStore.savePlan(plan_obj);
     }
   };

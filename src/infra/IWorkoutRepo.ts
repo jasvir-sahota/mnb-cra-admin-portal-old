@@ -5,6 +5,7 @@ interface IWorkoutPlanRepo {
   getWorkouts() : Promise<any[] | []>
   saveWorkout(workout: any) : Promise<string>
   saveWorkoutPlan(plan: any) : Promise<boolean>
+  uploadImage(base64_image: string, exercise_id: string): Promise<string>;
 }
 
 export default IWorkoutPlanRepo;

@@ -97,4 +97,27 @@ export class WorkoutRepo implements IWorkoutPlanRepo {
       return []
     }
   }
+
+  async uploadImage(base64_image: string, exercise_id: string) : Promise<string> {
+    const promise = new Promise<string>(async (resolve, reject) => {
+      try {
+        const res : any = await axios.post(`${this.API_HOST}api/v1/admin/exercises/${exercise_id}/`, {
+          base64_image,
+          withCredentials: true,
+          headers: {
+           'Access-Control-Allow-Credentials': "true",
+           'Access-Control-Allow-Origin' : '*',
+         },
+       });
+  
+       if(res.status === httpStatus.OK) {
+         resolve(res.data.image_url)
+       }
+      } catch (error) {
+        reject(error);
+      }
+    });
+    
+    return promise;
+  }
 }

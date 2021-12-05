@@ -7,7 +7,7 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { List, ListItem, ListItemIcon, ListItemText, Drawer, Theme } from '@mui/material'
-import { Settings, ContactSupport, Home } from '@mui/icons-material'
+import { Settings, ContactSupport, Home, FitnessCenter } from '@mui/icons-material'
 import { useStore } from "../App";
 import { makeStyles } from "@mui/styles";
 import { ActiveComponent } from "../domain/App";
@@ -89,6 +89,17 @@ const NavList = observer(() => {
             <ContactSupport />
           </ListItemIcon>
           <ListItemText primary={"Diet Plans"} classes = { { root: classes.listItemTextRoot}}/>
+      </ListItem>
+      </span>
+      <span onClick={() => {
+        store.appStore.active_component = ActiveComponent.Customer
+        navigate('/exercises')
+      }}>
+      <ListItem button key={"manage-exercise"}>
+          <ListItemIcon classes = { { root: classes.listItemRoot}}>
+            <FitnessCenter />
+          </ListItemIcon>
+          <ListItemText primary={"Manage Exercises"} classes = { { root: classes.listItemTextRoot}}/>
       </ListItem>
       </span>
     </List>

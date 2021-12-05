@@ -9,6 +9,13 @@ type schedule_items = {
   day: string
 }
 
+type exercise = {
+  name: string,
+  image: string,
+  added_by: string,
+  added_date: string
+}
+
 export type TrainingSchedule = {
   id: string,
   start_date: string,
@@ -16,4 +23,8 @@ export type TrainingSchedule = {
   is_active: boolean,
   items: schedule_items[],
   notes: string[]
+}
+
+export type {
+  exercise
 }

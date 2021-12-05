@@ -146,7 +146,6 @@ const AddDiet = observer((props: { name: any }) => {
       setItem(itemObj);
       const diet_obj = _.cloneDeep(item);
       diet_obj.name = name;
-      console.log(diet_obj);
       dietStore.saveDiet(diet_obj);
     }
   }

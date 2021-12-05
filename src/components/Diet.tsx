@@ -98,7 +98,6 @@ const Diet = (props: { schedules: DietSchedule[], customer_id: string }) => {
               event.target.value as string,
               schedules
             );
-            console.log(schedule);
             if (schedule !== undefined) {
               setSchedule(schedule);
             }

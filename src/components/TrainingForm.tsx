@@ -251,7 +251,6 @@ const TrainingForm = observer(
     let { REACT_APP_API_HOST } = process.env;
 
     if (!REACT_APP_API_HOST) {
-      console.log("api host not set");
       REACT_APP_API_HOST = "https://api.mnbfitness.ca/";
     }
     const config = {
@@ -299,7 +298,6 @@ const TrainingForm = observer(
       scheduleCopy.items = workout_items;
       scheduleCopy.is_active = isActive;
       scheduleCopy.notes = plan ? toJS(plan).notes : schedule.notes;
-      console.log(scheduleCopy);
       const result = _.values(scheduleCopy).find((value) => {
         if (typeof value !== "number" && typeof value !== "boolean") {
           return _.isEmpty(value);

@@ -10,6 +10,9 @@ import WorkoutPlans from "./components/WorkoutPlans";
 import WorkoutPlan from "./components/WorkoutPlan";
 import DietPlans from "./components/DietPlans";
 import DietPlan from "./components/DietPlan";
+import UploadImage from "./components/UploadImage";
+import ExerciseManage from "./components/ExerciseManage";
+import AddExercise from "./components/AddExercise";
 
 const StoreContext = createContext<RootStore | null>(null);
 const rootStore = new RootStore();
@@ -35,7 +38,6 @@ const FacadeApp = observer(() => {
   store.customerStore.fetchCustomers();
   store.workoutStore.fetchPlans();
   store.dietStore.fetchPlans();
-  console.log('called fetchcustomers')
   return (
     <div>
       <Header />
@@ -93,6 +95,8 @@ function App() {
                 <Route path="/add-workout-plan" element={<WorkoutPlan />} />
                 <Route path="/add-diet-plan" element={<DietPlan />} />
                 <Route path="/diet-plans" element={<DietPlans />} />
+                <Route path="/exercises" element={<ExerciseManage />} />
+                <Route path="/exercises/add-new" element={<AddExercise />} />
               </Routes>
             </Router>
           </ThemeProvider>

@@ -231,7 +231,6 @@ const DietScheduleForm = observer((props: { schedule: DietSchedule, customer_id:
   let { REACT_APP_API_HOST } = process.env;
 
   if(!REACT_APP_API_HOST) {
-    console.log('api host not set');
     REACT_APP_API_HOST = 'https://api.mnbfitness.ca/';
   } 
 
