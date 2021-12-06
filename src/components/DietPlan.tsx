@@ -76,7 +76,7 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   fullWidth: {
     width: "100%",
-    padding: "0 5% 0 0",
+    padding: "0 0 0 0",
     [theme.breakpoints.down("xs")]: {
       padding: "0 5% 10% 0",
     },

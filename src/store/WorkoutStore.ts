@@ -33,7 +33,6 @@ export class WorkoutStore {
     const workouts = await this._workoutPlanRepo.getWorkouts();
     this.workouts = workouts;
     this.workout_status = NetworkStatus.Loaded;
-    console.log(workouts);
   }
 
   async saveWorkout(workout: any) {
